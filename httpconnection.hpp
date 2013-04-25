@@ -58,6 +58,7 @@ private:
 			read_some();
 		} catch(HttpRequest::InvalidRequestException &e) {
 			std::cerr << "Parse Error: " << e.what() << std::endl;
+			// TODO: send back Bad Request and close the connection
 		}
 	}
 
