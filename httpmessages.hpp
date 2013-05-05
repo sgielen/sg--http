@@ -30,7 +30,7 @@ struct HttpMessage {
 		body_ = body;
 	}
 
-private:
+protected:
 	std::string body_;
 
 };
@@ -119,7 +119,20 @@ struct HttpRequest : public HttpMessage {
 			throw IncompleteRequestException();
 		}
 
-		// Body: TODO
+		if(headers.find("Content-Length") != headers.end()) {
+			if(headers["Content-Length"].length() > 4) {
+				// TODO: this should be 413 Request Entity Too Large
+				throw InvalidRequestException("Content-Length is over 4 digits, refusing to process");
+			}
+			std::stringstream clss;
+			unsigned int contentlength;
+			clss << headers["Content-Length"];
+			clss >> contentlength;
+			if(rawHttp.length() < unsigned(contentlength + ss.tellg())) {
+				throw IncompleteRequestException();
+			}
+			body_ = rawHttp.substr(ss.tellg(), contentlength);
+		}
 	}
 
 	std::string toString() {
