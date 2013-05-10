@@ -136,6 +136,10 @@ struct HttpResponse : public HttpMessage {
 		readHeadersAndBody(ss, rawHttp);
 	}
 
+	bool isSuccess() const {
+		return status >= 200 && status < 300;
+	}
+
 	std::string toString() const {
 		std::stringstream ss;
 		// HTTP/1.1 200 OK
@@ -150,6 +154,9 @@ struct HttpRequest : public HttpMessage {
 	std::string uri;
 	std::string httpVersion;
 
+	HttpRequest(std::string method, std::string uri)
+	: method(method), uri(uri), httpVersion("HTTP/1.1")
+	{}
 
 	HttpRequest(std::string rawHttp) {
 		std::stringstream ss(rawHttp);
