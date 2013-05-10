@@ -41,8 +41,70 @@ struct HttpMessage {
 	}
 
 protected:
-	std::string body_;
+	void readHeadersAndBody(std::istream &ss, std::string &rawHttp) {
+		readHeaders(ss);
+		readBody(ss, rawHttp);
+	}
 
+private:
+	void readHeaders(std::istream &ss) {
+		int linenr = 1;
+		std::string line;
+		while(std::getline(ss, line)) {
+			linenr++;
+			if(line == "" || line == "\r") {
+				return;
+			}
+			std::string name, value;
+			bool isName = true;
+			bool trimSpaces = false;
+			for(unsigned i = 0; i < line.length(); ++i) {
+				char c = line[i];
+				if(i + 1 == line.length() && c == '\r') {
+					// skip
+					break;
+				} else if(isName && c == ':') {
+					isName = false;
+					trimSpaces = true;
+				} else if(isName) {
+					name += c;
+				} else if(line[i] == ' ' && trimSpaces) {
+					// skip
+				} else {
+					trimSpaces = false;
+					value += c;
+				}
+			}
+			if(isName) {
+				std::stringstream ss;
+				ss << "Invalid syntax on header line " << linenr;
+				throw InvalidHttpMessageException(ss.str());
+			}
+			headers[name] = value;
+		}
+
+		// Headers weren't done yet (no empty line seen)
+		throw IncompleteHttpMessageException();
+	}
+
+	void readBody(std::istream &ss, std::string &rawHttp) {
+		if(headers.find("Content-Length") != headers.end()) {
+			if(headers["Content-Length"].length() > 4) {
+				// TODO: this should be 413 Request Entity Too Large
+				throw InvalidHttpMessageException("Content-Length is over 4 digits, refusing to process");
+			}
+			std::stringstream clss;
+			unsigned int contentlength;
+			clss << headers["Content-Length"];
+			clss >> contentlength;
+			if(rawHttp.length() < unsigned(contentlength + ss.tellg())) {
+				throw IncompleteHttpMessageException();
+			}
+			body_ = rawHttp.substr(ss.tellg(), contentlength);
+		}
+	}
+
+	std::string body_;
 };
 
 struct HttpResponse : public HttpMessage {
@@ -85,55 +147,7 @@ struct HttpRequest : public HttpMessage {
 			}
 		}
 
-		// Headers:
-		bool headersRead = false;
-		int linenr = 1;
-		while(std::getline(ss, line)) {
-			linenr++;
-			if(line == "" || line == "\r") {
-				headersRead = true;
-				break;
-			}
-			std::string name, value;
-			bool isName = true;
-			for(unsigned i = 0; i < line.length(); ++i) {
-				if(i + 1 == line.length() && line[i] == '\r') {
-					// skip
-					break;
-				} else if(isName && line[i] == ':') {
-					isName = false;
-				} else if(isName) {
-					name += line[i];
-				} else {
-					value += line[i];
-				}
-			}
-			if(isName) {
-				std::stringstream ss;
-				ss << "Invalid syntax on header line " << linenr;
-				throw InvalidHttpMessageException(ss.str());
-			}
-			headers[name] = value;
-		}
-
-		if(!headersRead) {
-			throw IncompleteHttpMessageException();
-		}
-
-		if(headers.find("Content-Length") != headers.end()) {
-			if(headers["Content-Length"].length() > 4) {
-				// TODO: this should be 413 Request Entity Too Large
-				throw InvalidHttpMessageException("Content-Length is over 4 digits, refusing to process");
-			}
-			std::stringstream clss;
-			unsigned int contentlength;
-			clss << headers["Content-Length"];
-			clss >> contentlength;
-			if(rawHttp.length() < unsigned(contentlength + ss.tellg())) {
-				throw IncompleteHttpMessageException();
-			}
-			body_ = rawHttp.substr(ss.tellg(), contentlength);
-		}
+		readHeadersAndBody(ss, rawHttp);
 	}
 
 	std::string toString() const {
