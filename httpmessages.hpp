@@ -9,6 +9,16 @@ namespace skynet {
 struct HttpMessage {
 	std::map<std::string, std::string> headers;
 
+	struct IncompleteHttpMessageException : public std::runtime_error {
+		IncompleteHttpMessageException()
+		: std::runtime_error("Incomplete HTTP message") {}
+	};
+
+	struct InvalidHttpMessageException : public std::runtime_error {
+		InvalidHttpMessageException(std::string what)
+		: std::runtime_error("Bad HTTP message: " + what) {}
+	};
+
 	std::string toText() const {
 		std::stringstream ss;
 		for(auto it = headers.begin(); it != headers.end(); ++it) {
@@ -62,15 +72,6 @@ struct HttpRequest : public HttpMessage {
 	std::string uri;
 	std::string httpVersion;
 
-	struct IncompleteRequestException : public std::runtime_error {
-		IncompleteRequestException()
-		: std::runtime_error("Incomplete request") {}
-	};
-
-	struct InvalidRequestException : public std::runtime_error {
-		InvalidRequestException(std::string what)
-		: std::runtime_error("Bad request: " + what) {}
-	};
 
 	HttpRequest(std::string rawHttp) {
 		std::stringstream ss(rawHttp);
@@ -80,7 +81,7 @@ struct HttpRequest : public HttpMessage {
 			std::stringstream firstline(line);
 			firstline >> method >> uri >> httpVersion;
 			if(httpVersion != "HTTP/1.0" && httpVersion != "HTTP/1.1") {
-				throw InvalidRequestException("HTTP version must be HTTP/1.0 or HTTP/1.1");
+				throw InvalidHttpMessageException("HTTP version must be HTTP/1.0 or HTTP/1.1");
 			}
 		}
 
@@ -110,26 +111,26 @@ struct HttpRequest : public HttpMessage {
 			if(isName) {
 				std::stringstream ss;
 				ss << "Invalid syntax on header line " << linenr;
-				throw InvalidRequestException(ss.str());
+				throw InvalidHttpMessageException(ss.str());
 			}
 			headers[name] = value;
 		}
 
 		if(!headersRead) {
-			throw IncompleteRequestException();
+			throw IncompleteHttpMessageException();
 		}
 
 		if(headers.find("Content-Length") != headers.end()) {
 			if(headers["Content-Length"].length() > 4) {
 				// TODO: this should be 413 Request Entity Too Large
-				throw InvalidRequestException("Content-Length is over 4 digits, refusing to process");
+				throw InvalidHttpMessageException("Content-Length is over 4 digits, refusing to process");
 			}
 			std::stringstream clss;
 			unsigned int contentlength;
 			clss << headers["Content-Length"];
 			clss >> contentlength;
 			if(rawHttp.length() < unsigned(contentlength + ss.tellg())) {
-				throw IncompleteRequestException();
+				throw IncompleteHttpMessageException();
 			}
 			body_ = rawHttp.substr(ss.tellg(), contentlength);
 		}

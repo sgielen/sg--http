@@ -54,9 +54,9 @@ private:
 			HttpResponsePtr response = delegate_->handleRequest(request);
 			respond(response);
 			read_some();
-		} catch(HttpRequest::IncompleteRequestException &) {
+		} catch(HttpMessage::IncompleteHttpMessageException &) {
 			read_some();
-		} catch(HttpRequest::InvalidRequestException &e) {
+		} catch(HttpRequest::InvalidHttpMessageException &e) {
 			std::cerr << "Parse Error: " << e.what() << std::endl;
 			// TODO: send back Bad Request and close the connection
 		}
