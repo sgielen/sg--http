@@ -9,7 +9,7 @@ namespace skynet {
 struct HttpMessage {
 	std::map<std::string, std::string> headers;
 
-	std::string toText() {
+	std::string toText() const {
 		std::stringstream ss;
 		for(auto it = headers.begin(); it != headers.end(); ++it) {
 			ss << it->first << ": " << it->second << std::endl;
@@ -48,7 +48,7 @@ struct HttpResponse : public HttpMessage {
 	: status(status), statusText(statusTextFor(status)), httpVersion("HTTP/1.1") {
 	}
 
-	std::string toString() {
+	std::string toString() const {
 		std::stringstream ss;
 		// HTTP/1.1 200 OK
 		ss << httpVersion << " " << status << " " << statusText << std::endl;
@@ -135,7 +135,7 @@ struct HttpRequest : public HttpMessage {
 		}
 	}
 
-	std::string toString() {
+	std::string toString() const {
 		std::stringstream ss;
 		// GET /foo/bar HTTP/1.1
 		ss << method << " " << urlencode(uri) << " " << httpVersion << std::endl;
