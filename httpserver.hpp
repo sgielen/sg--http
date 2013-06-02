@@ -52,30 +52,22 @@ public:
 private:
 	typedef boost::asio::ip::tcp tcp;
 	void start_accept() {
-		new_connection_.reset(new HttpConnection(io_service_,
+		HttpConnectionPtr new_connection(new HttpConnection(io_service_,
 			delegate_));
-		acceptor_.async_accept(new_connection_->socket(),
-			boost::bind(&HttpServer::handle_accept, this,
-			boost::asio::placeholders::error));
-	}
-
-	void handle_accept(const boost::system::error_code &e) {
-		if(!acceptor_.is_open()) {
-			return;
-		}
-
-		if(e) {
-			std::cerr << "Error: " << e << std::endl;
-		} else {
-			new_connection_->start();
-		}
-
-		start_accept();
+		acceptor_.async_accept(new_connection->socket(),
+			[this,new_connection](boost::system::error_code e) {
+				if(e) {
+					std::cerr << "Error accepting: " << e << std::endl;
+				} else {
+					new_connection->start();
+				}
+				start_accept();
+			}
+		);
 	}
 
 	boost::asio::io_service io_service_;
 	tcp::acceptor acceptor_;
-	HttpConnectionPtr new_connection_;
 	size_t thread_pool_size_;
 	HttpServerDelegatePtr delegate_;
 };
