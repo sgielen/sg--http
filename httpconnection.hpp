@@ -15,8 +15,7 @@ class HttpConnection :
 public:
 	HttpConnection(boost::asio::io_service &io_service,
 		HttpServerDelegatePtr &delegate)
-	: strand_(io_service)
-	, socket_(io_service)
+	: socket_(io_service)
 	, delegate_(delegate)
 	{}
 
@@ -29,24 +28,21 @@ public:
 	}
 
 	void read_some() {
+		auto that = shared_from_this();
 		socket_.async_read_some(boost::asio::buffer(buffer_),
-		    strand_.wrap(
-		        boost::bind(&HttpConnection::handle_read, shared_from_this(),
-			boost::asio::placeholders::error,
-			boost::asio::placeholders::bytes_transferred)));
+			[that](boost::system::error_code e, size_t bytes_transferred) {
+				if(e) {
+					std::cerr << "Read Error: " << e << std::endl;
+					return;
+				}
+				that->work_in_progress_.append(that->buffer_.data(), bytes_transferred);
+				that->tryHttpRequest();
+			}
+		);
 	}
 
 private:
-	void handle_read(const boost::system::error_code &e,
-	    size_t bytes_transferred)
-	{
-		if(e) {
-			std::cerr << "Read Error: " << e << std::endl;
-			return;
-		}
-
-		work_in_progress_.append(buffer_.data(), bytes_transferred);
-
+	void tryHttpRequest() {
 		try {
 			HttpRequestPtr request(new HttpRequest(work_in_progress_));
 			// TODO: buffer_ may contain multiple requests at the same time
@@ -75,29 +71,26 @@ private:
 		}
 	}
 
-	void handle_write(const boost::system::error_code &e) {
-		if(e) {
-			std::cerr << "Write Error: " << e << std::endl;
-			return;
-		}
-		// TODO: if connection-type wasn't keepalive:
-		//boost::system::error_code ec;
-		//socket_.shutdown(tcp::socket::shutdown_both, ec);
-	}
-
 	void respond(HttpResponsePtr &r) {
 		std::vector<boost::asio::const_buffer> sendbuffers;
 
 		const std::string sendmsg = r->toString();
 		sendbuffers.push_back(boost::asio::buffer(sendmsg));
 
+		auto that = shared_from_this();
 		boost::asio::async_write(socket_, sendbuffers,
-			strand_.wrap(
-				boost::bind(&HttpConnection::handle_write, shared_from_this(),
-				boost::asio::placeholders::error)));
+			[that](boost::system::error_code e, size_t) {
+				if(e) {
+					std::cerr << "Write Error: " << e << std::endl;
+					return;
+				}
+				// TODO: if connection-type wasn't keepalive:
+				//boost::system::error_code ec;
+				//socket_.shutdown(tcp::socket::shutdown_both, ec);
+			}
+		);
 	}
 
-	boost::asio::io_service::strand strand_;
 	tcp::socket socket_;
 	HttpServerDelegatePtr &delegate_;
 	boost::array<char, 8192> buffer_;

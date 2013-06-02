@@ -4,7 +4,6 @@
 // such is licensed under the Boost Software License, version 1.0.
 
 #include <boost/thread/thread.hpp>
-#include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include "http_global.hpp"
 #include "httpmessages.hpp"
