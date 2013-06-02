@@ -2,6 +2,7 @@
 
 #include "httpmessages.hpp"
 #include "http_global.hpp"
+#include "httpexception.hpp"
 #include <boost/array.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -51,7 +52,19 @@ private:
 			// TODO: buffer_ may contain multiple requests at the same time
 			// HttpRequest() should take one off of it and return the length read
 			work_in_progress_.clear();
-			HttpResponsePtr response = delegate_->handleRequest(request);
+			HttpResponsePtr response;
+			try {
+				response = delegate_->handleRequest(request);
+			} catch(HttpException &e) {
+				response = HttpResponsePtr(new HttpResponse(e.code()));
+				response->setBody(e.body(), "text/plain");
+			} catch(std::exception &e) {
+				response = HttpResponsePtr(new HttpResponse(500));
+				response->setBody("Internal server error: " + std::string(e.what()), "text/plain");
+			} catch(...) {
+				response = HttpResponsePtr(new HttpResponse(500));
+				response->setBody("Internal server error", "text/plain");
+			}
 			respond(response);
 			read_some();
 		} catch(HttpMessage::IncompleteHttpMessageException &) {
