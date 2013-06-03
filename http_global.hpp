@@ -25,4 +25,7 @@ public:
 
 typedef std::shared_ptr<HttpServerDelegate> HttpServerDelegatePtr;
 
+struct BaseSocket;
+typedef std::shared_ptr<BaseSocket> BaseSocketPtr;
+
 }

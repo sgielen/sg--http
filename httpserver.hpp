@@ -52,13 +52,14 @@ public:
 private:
 	typedef boost::asio::ip::tcp tcp;
 	void start_accept() {
-		HttpConnectionPtr new_connection(new HttpConnection(io_service_,
-			delegate_));
-		acceptor_.async_accept(new_connection->socket(),
-			[this,new_connection](boost::system::error_code e) {
+		BaseSocketPtr sock(new Socket(io_service_));
+		acceptor_.async_accept(sock->accept_socket(),
+			[this,sock](boost::system::error_code e) {
 				if(e) {
 					std::cerr << "Error accepting: " << e << std::endl;
 				} else {
+					HttpConnectionPtr new_connection(new HttpConnection(sock,
+						delegate_));
 					new_connection->start();
 				}
 				start_accept();

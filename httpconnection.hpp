@@ -3,6 +3,7 @@
 #include "httpmessages.hpp"
 #include "http_global.hpp"
 #include "httpexception.hpp"
+#include "socket.hpp"
 #include <boost/array.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -13,15 +14,11 @@ class HttpConnection :
 {
 	typedef boost::asio::ip::tcp tcp;
 public:
-	HttpConnection(boost::asio::io_service &io_service,
+	HttpConnection(BaseSocketPtr socket,
 		HttpServerDelegatePtr &delegate)
-	: socket_(io_service)
+	: socket_(socket)
 	, delegate_(delegate)
 	{}
-
-	tcp::socket &socket() {
-		return socket_;
-	}
 
 	void start() {
 		read_some();
@@ -29,7 +26,7 @@ public:
 
 	void read_some() {
 		auto that = shared_from_this();
-		socket_.async_read_some(boost::asio::buffer(buffer_),
+		socket_->async_read_some(boost::asio::buffer(buffer_),
 			[that](boost::system::error_code e, size_t bytes_transferred) {
 				if(e) {
 					std::cerr << "Read Error: " << e << std::endl;
@@ -78,7 +75,7 @@ private:
 		sendbuffers.push_back(boost::asio::buffer(sendmsg));
 
 		auto that = shared_from_this();
-		boost::asio::async_write(socket_, sendbuffers,
+		socket_->async_write(sendbuffers,
 			[that](boost::system::error_code e, size_t) {
 				if(e) {
 					std::cerr << "Write Error: " << e << std::endl;
@@ -91,7 +88,7 @@ private:
 		);
 	}
 
-	tcp::socket socket_;
+	BaseSocketPtr socket_;
 	HttpServerDelegatePtr &delegate_;
 	boost::array<char, 8192> buffer_;
 	std::string work_in_progress_;
