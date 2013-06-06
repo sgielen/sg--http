@@ -19,14 +19,7 @@ public:
 	, acceptor_(io_service_)
 	, thread_pool_size_(thread_pool_size)
 	, delegate_(delegate) {
-		tcp::resolver resolver(io_service_);
-		tcp::resolver::query query(address, port);
-		tcp::endpoint endpoint = *resolver.resolve(query);
-		acceptor_.open(endpoint.protocol());
-		acceptor_.set_option(tcp::acceptor::reuse_address(true));
-		acceptor_.bind(endpoint);
-		acceptor_.listen();
-
+		init_acceptor(address, port);
 		start_accept();
 	}
 
@@ -51,6 +44,17 @@ public:
 
 private:
 	typedef boost::asio::ip::tcp tcp;
+
+	void init_acceptor(std::string address, std::string port) {
+		tcp::resolver resolver(io_service_);
+		tcp::resolver::query query(address, port);
+		tcp::endpoint endpoint = *resolver.resolve(query);
+		acceptor_.open(endpoint.protocol());
+		acceptor_.set_option(tcp::acceptor::reuse_address(true));
+		acceptor_.bind(endpoint);
+		acceptor_.listen();
+	}
+
 	void start_accept() {
 		BaseSocketPtr sock(new Socket(io_service_));
 		sock->async_accept(acceptor_,
