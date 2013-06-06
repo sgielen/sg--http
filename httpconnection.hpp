@@ -21,7 +21,10 @@ public:
 	{}
 
 	void start() {
-		read_some();
+		auto that = shared_from_this();
+		socket_->async_start(
+			[that]() { that->read_some(); }
+		);
 	}
 
 	void read_some() {

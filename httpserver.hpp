@@ -53,7 +53,7 @@ private:
 	typedef boost::asio::ip::tcp tcp;
 	void start_accept() {
 		BaseSocketPtr sock(new Socket(io_service_));
-		acceptor_.async_accept(sock->accept_socket(),
+		sock->async_accept(acceptor_,
 			[this,sock](boost::system::error_code e) {
 				if(e) {
 					std::cerr << "Error accepting: " << e << std::endl;
