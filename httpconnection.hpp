@@ -32,7 +32,7 @@ public:
 		socket_->async_read_some(boost::asio::buffer(buffer_),
 			[that](boost::system::error_code e, size_t bytes_transferred) {
 				if(e) {
-					std::cerr << "Read Error: " << e << std::endl;
+					std::cerr << "Read Error: " << e.message() << std::endl;
 					return;
 				}
 				that->work_in_progress_.append(that->buffer_.data(), bytes_transferred);
@@ -81,7 +81,7 @@ private:
 		socket_->async_write(sendbuffers,
 			[that](boost::system::error_code e, size_t) {
 				if(e) {
-					std::cerr << "Write Error: " << e << std::endl;
+					std::cerr << "Write Error: " << e.message() << std::endl;
 					return;
 				}
 				// TODO: if connection-type wasn't keepalive:

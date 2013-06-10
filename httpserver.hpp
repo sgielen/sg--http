@@ -89,7 +89,7 @@ private:
 		sock->async_accept(acceptor_,
 			[this,sock](boost::system::error_code e) {
 				if(e) {
-					std::cerr << "Error accepting: " << e << std::endl;
+					std::cerr << "Error accepting: " << e.message() << std::endl;
 				} else {
 					HttpConnectionPtr new_connection(new HttpConnection(sock,
 						delegate_));

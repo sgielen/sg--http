@@ -66,7 +66,7 @@ struct SslSocket : public BaseSocket
 		socket_.async_handshake(boost::asio::ssl::stream_base::server,
 			[f](boost::system::error_code error) {
 				if(error) {
-					std::cerr << "SSL handshake error: " << error << std::endl;
+					std::cerr << "SSL handshake error: " << error.message() << std::endl;
 				} else {
 					f();
 				}
