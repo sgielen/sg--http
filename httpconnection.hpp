@@ -53,6 +53,7 @@ private:
 				response = delegate_->handleRequest(request);
 			} catch(HttpException &e) {
 				response = HttpResponsePtr(new HttpResponse(e.code()));
+				response->headers = e.headers();
 				response->setBody(e.body(), "text/plain");
 			} catch(std::exception &e) {
 				response = HttpResponsePtr(new HttpResponse(500));
