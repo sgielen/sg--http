@@ -160,9 +160,21 @@ struct HttpRequest : public HttpMessage {
 
 	HttpRequest(std::string rawHttp) {
 		std::stringstream ss(rawHttp);
-		std::string line;
 		{ // First line: <method> <uri> <httpver>
-			std::getline(ss, line);
+			std::string line;
+			char last;
+			bool has_eol = false;
+			while(ss.get(last)) {
+				if(last == '\n') {
+					has_eol = true;
+					break;
+				} else {
+					line.push_back(last);
+				}
+			}
+			if(!has_eol) {
+				throw IncompleteHttpMessageException();
+			}
 			std::stringstream firstline(line);
 			firstline >> method >> uri >> httpVersion;
 			if(httpVersion != "HTTP/1.0" && httpVersion != "HTTP/1.1") {
