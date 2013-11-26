@@ -60,8 +60,9 @@ typedef HttpExceptionTempl<405> HttpMethodNotAcceptable;
 typedef HttpExceptionTempl<500> HttpInternalServerError;
 
 class HttpUnauthorized : public HttpException {
-	void add_auth_header() {
-		headers_["WWW-Authenticate"] = "Basic realm=\"Skynet\"";
+	void add_auth_header(std::string realm) {
+		// TODO: what characters are allowed in the realm? how to escape others?
+		headers_["WWW-Authenticate"] = "Basic realm=\"" + realm + "\"";
 	}
 
 public:
