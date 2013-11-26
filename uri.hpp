@@ -3,7 +3,7 @@
 #include <string>
 #include <sstream>
 
-namespace skynet {
+namespace sg { namespace http {
 
 struct Uri {
 	std::string scheme; // excluding ://
@@ -120,4 +120,4 @@ struct Uri {
 	}
 };
 
-};
+}}

@@ -4,7 +4,7 @@
 #include "http_global.hpp"
 #include "http_util.hpp"
 
-namespace skynet {
+namespace sg { namespace http {
 
 struct HttpMessage {
 	std::map<std::string, std::string> headers;
@@ -194,4 +194,4 @@ struct HttpRequest : public HttpMessage {
 	}
 };
 
-}
+}}

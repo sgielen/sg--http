@@ -4,7 +4,7 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
-namespace skynet {
+namespace sg { namespace http {
 
 struct BaseSocket
 {
@@ -91,4 +91,4 @@ private:
 	ssl_socket socket_;
 };
 
-}
+}}

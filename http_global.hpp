@@ -3,7 +3,7 @@
 #include <memory>
 #include <boost/shared_ptr.hpp>
 
-namespace skynet {
+namespace sg { namespace http {
 
 // This MUST be a boost::shared_ptr because of boosts' enable_shared_from_this
 // in Connection...
@@ -28,4 +28,4 @@ typedef std::shared_ptr<HttpServerDelegate> HttpServerDelegatePtr;
 struct BaseSocket;
 typedef std::shared_ptr<BaseSocket> BaseSocketPtr;
 
-}
+}}

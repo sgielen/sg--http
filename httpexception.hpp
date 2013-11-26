@@ -5,7 +5,7 @@
 #include <string>
 #include "http_util.hpp"
 
-namespace skynet {
+namespace sg { namespace http {
 
 class HttpException : public std::runtime_error {
 	uint16_t code_;
@@ -75,4 +75,4 @@ public:
 	}
 };
 
-}
+}}

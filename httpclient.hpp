@@ -9,7 +9,7 @@
 #include "httpmessages.hpp"
 #include "uri.hpp"
 
-namespace skynet {
+namespace sg { namespace http {
 
 class HttpClient {
 public:
@@ -60,4 +60,4 @@ public:
 	}
 };
 
-}
+}}

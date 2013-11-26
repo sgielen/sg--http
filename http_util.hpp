@@ -1,6 +1,9 @@
 #pragma once
 
-namespace skynet {
+#include <string>
+#include <cstdint>
+
+namespace sg { namespace http {
 
 std::string urlencode(std::string s) {
 	// TODO
@@ -72,4 +75,4 @@ std::string statusTextFor(uint16_t status) {
 	}
 }
 
-}
+}}

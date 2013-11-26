@@ -10,7 +10,7 @@
 #include "http_global.hpp"
 #include "httpconnection.hpp"
 
-namespace skynet {
+namespace sg { namespace http {
 
 typedef std::unique_ptr<boost::asio::ssl::context> SslContext;
 
@@ -108,4 +108,4 @@ private:
 	bool ssl_;
 };
 
-}
+}}

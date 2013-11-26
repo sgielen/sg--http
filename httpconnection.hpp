@@ -7,7 +7,7 @@
 #include <boost/array.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
-namespace skynet {
+namespace sg { namespace http {
 
 class HttpConnection :
 	public boost::enable_shared_from_this<HttpConnection>
@@ -98,4 +98,4 @@ private:
 	std::string work_in_progress_;
 };
 
-}
+}}
