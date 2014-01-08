@@ -29,9 +29,9 @@ int main() {
 	};
 
 	// Create server thread
-	boost::thread t([host, port, handleRequest]() {
-		HttpServer hs(host, port, 1, handleRequest);
-		hs.run();
+	HttpServer *hs = new HttpServer(host, port, 1, handleRequest);
+	boost::thread t([&hs, host, port, handleRequest]() {
+		hs->run();
 	});
 
 	sleep(1);
@@ -51,4 +51,7 @@ int main() {
 	} else {
 		std::cout << "not ok 2 Error request" << std::endl;
 	}
+
+	delete hs;
+	t.join();
 }

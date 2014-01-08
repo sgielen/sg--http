@@ -40,6 +40,10 @@ public:
 		start_accept();
 	}
 
+	~HttpServer() {
+		stop();
+	}
+
 	void run() {
 		std::vector<boost::shared_ptr<boost::thread>> threads;
 		for(size_t i = 0; i < thread_pool_size_; ++i) {
