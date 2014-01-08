@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <map>
+#include <stdexcept>
 #include <sstream>
 #include "http_global.hpp"
 #include "http_util.hpp"
