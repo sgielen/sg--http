@@ -10,17 +10,6 @@ const std::string body = "Hello world";
 const std::string contentType = "text/plain";
 const std::string errorBody = "Invalid method/uri";
 
-class ServerHandler : public sg::http::HttpServerDelegate {
-	sg::http::HttpResponsePtr handleRequest(sg::http::HttpRequestPtr &req) {
-		if(req->method != method || req->uri != uri) {
-			throw sg::http::HttpBadRequest(req, errorBody);
-		}
-		auto response = std::make_shared<sg::http::HttpResponse>(200);
-		response->setBody(body, contentType);
-		return response;
-	}
-};
-
 int main() {
 	using namespace sg::http;
 
@@ -29,10 +18,19 @@ int main() {
 
 	std::cout << "1..2" << std::endl;
 
+	// request handler
+	auto handleRequest = [&](sg::http::HttpRequestPtr req) -> sg::http::HttpResponsePtr {
+		if(req->method != method || req->uri != uri) {
+			throw sg::http::HttpBadRequest(req, errorBody);
+		}
+		auto response = std::make_shared<sg::http::HttpResponse>(200);
+		response->setBody(body, contentType);
+		return response;
+	};
+
 	// Create server thread
-	boost::thread t([host, port]() {
-		HttpServerDelegatePtr serverDelegate = std::make_shared<ServerHandler>();
-		HttpServer hs(host, port, 1, serverDelegate);
+	boost::thread t([host, port, handleRequest]() {
+		HttpServer hs(host, port, 1, handleRequest);
 		hs.run();
 	});
 

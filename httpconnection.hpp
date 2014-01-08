@@ -14,8 +14,7 @@ class HttpConnection :
 {
 	typedef boost::asio::ip::tcp tcp;
 public:
-	HttpConnection(BaseSocketPtr socket,
-		HttpServerDelegatePtr &delegate)
+	HttpConnection(BaseSocketPtr socket, RequestHandler delegate)
 	: socket_(socket)
 	, delegate_(delegate)
 	{}
@@ -50,7 +49,7 @@ private:
 			work_in_progress_.clear();
 			HttpResponsePtr response;
 			try {
-				response = delegate_->handleRequest(request);
+				response = delegate_(request);
 			} catch(HttpException &e) {
 				response = HttpResponsePtr(new HttpResponse(e.code()));
 				response->headers = e.headers();
@@ -93,7 +92,7 @@ private:
 	}
 
 	BaseSocketPtr socket_;
-	HttpServerDelegatePtr &delegate_;
+	RequestHandler delegate_;
 	boost::array<char, 8192> buffer_;
 	std::string work_in_progress_;
 };

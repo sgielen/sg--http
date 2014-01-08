@@ -16,14 +16,9 @@ typedef std::shared_ptr<HttpRequest> HttpRequestPtr;
 struct HttpResponse;
 typedef std::shared_ptr<HttpResponse> HttpResponsePtr;
 
-class HttpServerDelegate {
-public:
-	// Caution: HttpServer is threaded, so this method may be called
-	// in various threads simultaneously.
-	virtual HttpResponsePtr handleRequest(HttpRequestPtr &req) = 0;
-};
-
-typedef std::shared_ptr<HttpServerDelegate> HttpServerDelegatePtr;
+// Caution: HttpServer is threaded, so this function may be called in various
+// threads simultaneously.
+typedef std::function<HttpResponsePtr(HttpRequestPtr)> RequestHandler;
 
 struct BaseSocket;
 typedef std::shared_ptr<BaseSocket> BaseSocketPtr;

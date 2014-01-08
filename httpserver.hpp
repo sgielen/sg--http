@@ -18,7 +18,7 @@ class HttpServer {
 public:
 	HttpServer(std::string address, std::string port,
 		size_t thread_pool_size, SslContext context,
-		HttpServerDelegatePtr delegate)
+		RequestHandler delegate)
 	: io_service_()
 	, acceptor_(io_service_)
 	, thread_pool_size_(thread_pool_size)
@@ -30,7 +30,7 @@ public:
 	}
 
 	HttpServer(std::string address, std::string port,
-		size_t thread_pool_size, HttpServerDelegatePtr delegate)
+		size_t thread_pool_size, RequestHandler delegate)
 	: io_service_()
 	, acceptor_(io_service_)
 	, thread_pool_size_(thread_pool_size)
@@ -103,7 +103,7 @@ private:
 	boost::asio::io_service io_service_;
 	tcp::acceptor acceptor_;
 	size_t thread_pool_size_;
-	HttpServerDelegatePtr delegate_;
+	RequestHandler delegate_;
 	SslContext ssl_context_;
 	bool ssl_;
 };
