@@ -5,6 +5,14 @@
 
 namespace sg { namespace http {
 
+template <typename Container, typename Value>
+inline bool contains(Container const &c, Value const &v) {
+	for(auto const &cv : c) {
+		if(cv == v) return true;
+	}
+	return false;
+}
+
 inline std::string urlencode(std::string s) {
 	// TODO
 	return s;

@@ -8,9 +8,12 @@ if(USE_LIBCPP)
 	set(CMAKE_EXE_LINKER_FLAGS "-stdlib=libc++")
 endif()
 
-find_package(Boost COMPONENTS thread system REQUIRED)
+find_package(Boost COMPONENTS thread system regex REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
 add_executable(selfconnect selfconnect.cpp)
 target_link_libraries(selfconnect ${Boost_LIBRARIES} crypto ssl)
+
+add_executable(router router.cpp)
+target_link_libraries(router ${Boost_LIBRARIES} crypto ssl)
