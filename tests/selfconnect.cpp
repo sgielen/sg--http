@@ -52,6 +52,7 @@ int main() {
 		std::cout << "not ok 2 Error request" << std::endl;
 	}
 
-	delete hs;
+	hs->stop();
 	t.join();
+	delete hs;
 }
