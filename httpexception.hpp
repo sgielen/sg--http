@@ -59,20 +59,18 @@ typedef HttpExceptionTempl<404> HttpNotFound;
 typedef HttpExceptionTempl<405> HttpMethodNotAcceptable;
 typedef HttpExceptionTempl<500> HttpInternalServerError;
 
-class HttpUnauthorized : public HttpException {
+class HttpUnauthorized : public HttpExceptionTempl<401> {
+	typedef HttpExceptionTempl<401> Parent;
 	void add_auth_header(std::string realm) {
 		// TODO: what characters are allowed in the realm? how to escape others?
 		headers_["WWW-Authenticate"] = "Basic realm=\"" + realm + "\"";
 	}
 
 public:
-	HttpUnauthorized(HttpRequestPtr req, std::string what)
-	: HttpException(401, req, what) {
-		add_auth_header();
-	}
-	HttpUnauthorized(HttpRequestPtr req)
-	: HttpException(401, req) {
-		add_auth_header();
+	HttpUnauthorized(HttpRequestPtr req) : Parent(req) {}
+	HttpUnauthorized(HttpRequestPtr req, std::string what) : Parent(req, what) {}
+	HttpUnauthorized(HttpRequestPtr req, std::string what, std::string realm) : Parent(req, what) {
+		add_auth_header(realm);
 	}
 };
 
