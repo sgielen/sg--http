@@ -5,17 +5,17 @@
 
 namespace sg { namespace http {
 
-std::string urlencode(std::string s) {
+inline std::string urlencode(std::string s) {
 	// TODO
 	return s;
 }
 
-std::string urldecode(std::string s) {
+inline std::string urldecode(std::string s) {
 	// TODO
 	return s;
 }
 
-std::string statusTextFor(uint16_t status) {
+inline std::string statusTextFor(uint16_t status) {
 	// ref: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 	switch(status) {
 	case 100: return "Continue";
