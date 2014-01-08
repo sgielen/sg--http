@@ -47,20 +47,7 @@ private:
 			// TODO: buffer_ may contain multiple requests at the same time
 			// HttpRequest() should take one off of it and return the length read
 			work_in_progress_.clear();
-			HttpResponsePtr response;
-			try {
-				response = delegate_(request);
-			} catch(HttpException &e) {
-				response = HttpResponsePtr(new HttpResponse(e.code()));
-				response->headers = e.headers();
-				response->setBody(e.body(), "text/plain");
-			} catch(std::exception &e) {
-				response = HttpResponsePtr(new HttpResponse(500));
-				response->setBody("Internal server error: " + std::string(e.what()), "text/plain");
-			} catch(...) {
-				response = HttpResponsePtr(new HttpResponse(500));
-				response->setBody("Internal server error", "text/plain");
-			}
+			HttpResponsePtr response = request_exception_wrapper(request, delegate_);
 			respond(response);
 			read_some();
 		} catch(HttpMessage::IncompleteHttpMessageException &) {

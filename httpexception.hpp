@@ -74,4 +74,23 @@ public:
 	}
 };
 
+inline HttpResponsePtr request_exception_wrapper(HttpRequestPtr &request, RequestHandler handler) {
+	try {
+		return handler(request);
+	} catch(HttpException &e) {
+		auto response = HttpResponsePtr(new HttpResponse(e.code()));
+		response->headers = e.headers();
+		response->setBody(e.body(), "text/plain");
+		return response;
+	} catch(std::exception &e) {
+		auto response = HttpResponsePtr(new HttpResponse(500));
+		response->setBody("Internal server error: " + std::string(e.what()), "text/plain");
+		return response;
+	} catch(...) {
+		auto response = HttpResponsePtr(new HttpResponse(500));
+		response->setBody("Internal server error", "text/plain");
+		return response;
+	}
+}
+
 }}
