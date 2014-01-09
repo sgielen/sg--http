@@ -1,13 +1,13 @@
 #include <apiserver.hpp>
 #include <unistd.h>
+#include <sg_test.hpp>
 
 int main() {
 	using namespace sg::http;
+	sg::test::Test tester(11);
 
 	typedef HttpRequestPtr HR;
 	typedef std::vector<std::string> PM; // parameters
-
-	std::cout << "1..13" << std::endl;
 
 	{ // Handle a simple request
 		bool ok = false;
@@ -16,16 +16,8 @@ int main() {
 			return std::make_shared<HttpResponse>(204);
 		}});
 		HttpResponsePtr resp = r.handle(std::make_shared<HttpRequest>("GET", "/foo"));
-		if(resp->status == 204) {
-			std::cout << "ok 1 Got correct response" << std::endl;
-		} else {
-			std::cout << "not ok 1 Got correct response" << std::endl;
-		}
-		if(ok) {
-			std::cout << "ok 2 Request was handled" << std::endl;
-		} else {
-			std::cout << "not ok 2 Request was handled" << std::endl;
-		}
+		tester.test(resp->status == 204, "Got correct response");
+		tester.test(ok, "Request was handled");
 	}
 
 	{ // Handle a simple any-method request
@@ -35,16 +27,8 @@ int main() {
 			return std::make_shared<HttpResponse>(204);
 		}});
 		HttpResponsePtr resp = r.handle(std::make_shared<HttpRequest>("FOOBAR", "/foo"));
-		if(resp->status == 204) {
-			std::cout << "ok 3 Got correct response" << std::endl;
-		} else {
-			std::cout << "not ok 3 Got correct response" << std::endl;
-		}
-		if(ok) {
-			std::cout << "ok 4 Request was handled" << std::endl;
-		} else {
-			std::cout << "not ok 4 Request was handled" << std::endl;
-		}
+		tester.test(resp->status == 204, "Got correct response");
+		tester.test(ok, "Request was handled");
 	}
 
 	{ // Two methods, handle the right one
@@ -59,16 +43,8 @@ int main() {
 			return std::make_shared<HttpResponse>(204);
 		}});
 		HttpResponsePtr resp = r.handle(std::make_shared<HttpRequest>("POST", "/foo"));
-		if(resp->status == 204) {
-			std::cout << "ok 5 Got correct response" << std::endl;
-		} else {
-			std::cout << "not ok 6 Got correct response" << std::endl;
-		}
-		if(ok) {
-			std::cout << "ok 7 Request was handled" << std::endl;
-		} else {
-			std::cout << "not ok 8 Request was handled" << std::endl;
-		}
+		tester.test(resp->status == 204, "Got correct response");
+		tester.test(ok, "Request was handled");
 	}
 
 	{ // No methods matched
@@ -78,16 +54,8 @@ int main() {
 			return std::make_shared<HttpResponse>(204);
 		}});
 		HttpResponsePtr resp = r.handle(std::make_shared<HttpRequest>("FOOBAR", "/foo"));
-		if(resp->status == 405) {
-			std::cout << "ok 9 Got correct response" << std::endl;
-		} else {
-			std::cout << "not ok 9 Got correct response" << std::endl;
-		}
-		if(ok) {
-			std::cout << "ok 10 Request was not handled" << std::endl;
-		} else {
-			std::cout << "not ok 10 Request was not handled" << std::endl;
-		}
+		tester.test(resp->status == 405, "Got correct response");
+		tester.test(ok, "Request was not handled");
 	}
 
 	{ // No paths matched
@@ -97,25 +65,13 @@ int main() {
 			return std::make_shared<HttpResponse>(204);
 		}});
 		HttpResponsePtr resp = r.handle(std::make_shared<HttpRequest>("GET", "/bar"));
-		if(resp->status == 404) {
-			std::cout << "ok 11 Got correct response" << std::endl;
-		} else {
-			std::cout << "not ok 11 Got correct response" << std::endl;
-		}
-		if(ok) {
-			std::cout << "ok 12 Request was not handled" << std::endl;
-		} else {
-			std::cout << "not ok 12 Request was not handled" << std::endl;
-		}
+		tester.test(resp->status == 404, "Got correct response");
+		tester.test(ok, "Request was not handled");
 	}
 
 	{ // Empty router: no paths matched
 		ApiRouter r;
 		HttpResponsePtr resp = r.handle(std::make_shared<HttpRequest>("GET", "/bar"));
-		if(resp->status == 404) {
-			std::cout << "ok 13 Got correct response" << std::endl;
-		} else {
-			std::cout << "not ok 13 Got correct response" << std::endl;
-		}
+		tester.test(resp->status == 404, "Got correct response");
 	}
 }

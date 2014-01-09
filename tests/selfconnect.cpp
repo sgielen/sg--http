@@ -2,6 +2,7 @@
 #include <httpclient.hpp>
 #include <boost/thread.hpp>
 #include <unistd.h>
+#include <sg_test.hpp>
 
 const std::string method = "OPTIONS";
 const std::string uri = "/foo/bar";
@@ -12,11 +13,10 @@ const std::string errorBody = "Invalid method/uri";
 
 int main() {
 	using namespace sg::http;
+	sg::test::Test tester(4);
 
 	std::string host = "127.0.0.1";
 	std::string port = "1337";
-
-	std::cout << "1..2" << std::endl;
 
 	// request handler
 	auto handleRequest = [&](sg::http::HttpRequestPtr req) -> sg::http::HttpResponsePtr {
@@ -38,19 +38,13 @@ int main() {
 	// Run client here
 	HttpRequest request(method, uri);
 	HttpResponse response = HttpClient::request(request, host, port);
-	if(response.body() == body && response.headers["Content-Type"] == contentType) {
-		std::cout << "ok 1 Normal request" << std::endl;
-	} else {
-		std::cout << "not ok 1 Normal request" << std::endl;
-	}
+	tester.test(response.body() == body, "Body matches");
+	tester.test(response.headers["Content-Type"] == contentType, "Content-type matches");
 
 	HttpRequest request2(method, uri2);
 	HttpResponse response2 = HttpClient::request(request2, host, port);
-	if(response2.body().substr(0, errorBody.length()) == errorBody && response2.status == 400) {
-		std::cout << "ok 2 Error request" << std::endl;
-	} else {
-		std::cout << "not ok 2 Error request" << std::endl;
-	}
+	tester.test(response2.body().substr(0, errorBody.length()) == errorBody, "Error body matches");
+	tester.test(response2.status == 400, "Status code matches");
 
 	hs->stop();
 	t.join();
