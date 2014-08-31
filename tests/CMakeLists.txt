@@ -18,3 +18,6 @@ target_link_libraries(selfconnect ${Boost_LIBRARIES} crypto ssl)
 
 add_executable(router router.cpp)
 target_link_libraries(router ${Boost_LIBRARIES} crypto ssl)
+
+add_executable(streaming streaming.cpp)
+target_link_libraries(streaming ${Boost_LIBRARIES} crypto ssl)

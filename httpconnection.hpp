@@ -78,8 +78,21 @@ private:
 		std::string headers = r->toHeaders();
 		socket_->async_write(headers, write_handler);
 
-		std::string body = r->body();
-		socket_->async_write(body, write_handler);
+		if(r->isChunked()) {
+			try {
+				while(1) {
+					std::string chunk = r->readChunk();
+					socket_->async_write(chunk, write_handler);
+				}
+			} catch(HttpMessage::NoChunksLeftException &) {
+				// TODO: use chunked transfer-encoding and send "end of chunks" signal
+				boost::system::error_code ec;
+				socket_->shutdown(tcp::socket::shutdown_both, ec);
+			}
+		} else {
+			std::string body = r->body();
+			socket_->async_write(body, write_handler);
+		}
 	}
 
 	BaseSocketPtr socket_;

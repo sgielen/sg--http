@@ -16,6 +16,7 @@ struct BaseSocket
 		std::function<void(boost::system::error_code, size_t)>) = 0;
 	virtual void async_write(std::string const &,
 		std::function<void(boost::system::error_code, size_t)>) = 0;
+	virtual void shutdown(boost::asio::socket_base::shutdown_type type, boost::system::error_code &) = 0;
 };
 
 struct Socket : public BaseSocket
@@ -44,6 +45,11 @@ struct Socket : public BaseSocket
 		std::function<void(boost::system::error_code, size_t)> f)
 	{
 		boost::asio::async_write(socket_, boost::asio::buffer(b.data(), b.size()), f);
+	}
+
+	virtual void shutdown(boost::asio::socket_base::shutdown_type type, boost::system::error_code &ec)
+	{
+		socket_.shutdown(type, ec);
 	}
 
 private:
@@ -84,6 +90,11 @@ struct SslSocket : public BaseSocket
 		std::function<void(boost::system::error_code, size_t)> f)
 	{
 		boost::asio::async_write(socket_, boost::asio::buffer(b.data(), b.size()), f);
+	}
+
+	virtual void shutdown(boost::asio::socket_base::shutdown_type type, boost::system::error_code &ec)
+	{
+		socket_.lowest_layer().shutdown(type, ec);
 	}
 
 private:

@@ -4,6 +4,7 @@
 #include <map>
 #include <stdexcept>
 #include <sstream>
+#include <functional>
 #include "http_global.hpp"
 #include "http_util.hpp"
 
@@ -22,6 +23,11 @@ struct HttpMessage {
 		: std::runtime_error("Bad HTTP message: " + what) {}
 	};
 
+	struct NoChunksLeftException : public std::runtime_error {
+		NoChunksLeftException()
+		: std::runtime_error("No chunks left") {}
+	};
+
 	std::string toHeaders() const {
 		std::stringstream ss;
 		for(auto it = headers.begin(); it != headers.end(); ++it) {
@@ -37,7 +43,44 @@ struct HttpMessage {
 		return ss.str();
 	}
 
+	bool isChunked() const {
+		return isChunked_;
+	}
+
 	std::string body() const {
+		if(isChunked_) {
+			throw std::runtime_error("body() called, but this is a chunked HttpMessage");
+		}
+		return body_;
+	}
+
+	std::string readChunk() {
+		if(!isChunked_) {
+			throw std::runtime_error("readChunk() called, but this is not a chunked HttpMessage");
+		} else if(chunksDone_) {
+			throw NoChunksLeftException();
+		}
+
+		try {
+			std::string res = readChunk_();
+			return res;
+		} catch(NoChunksLeftException &e) {
+			chunksDone_ = true;
+			throw e;
+		}
+	}
+
+	std::string &readFullBodyFromChunks() {
+		if(isChunked_) {
+			body_.clear();
+			try {
+				while(1) {
+					body_ += readChunk();
+				}
+			} catch(NoChunksLeftException&) {
+				isChunked_ = false;
+			}
+		}
 		return body_;
 	}
 
@@ -46,7 +89,17 @@ struct HttpMessage {
 		std::stringstream cl;
 		cl << body.length();
 		headers["Content-Length"] = cl.str();
+		isChunked_ = false;
+		chunksDone_ = false;
 		body_ = body;
+	}
+
+	void setBodyChunkFunction(std::function<std::string()> function, std::string contenttype) {
+		headers["Content-Type"] = contenttype;
+
+		isChunked_ = true;
+		chunksDone_ = false;
+		readChunk_ = function;
 	}
 
 protected:
@@ -97,6 +150,9 @@ private:
 	}
 
 	void readBody(std::istream &ss, std::string &rawHttp, bool socket_still_readable, bool expect_http_response) {
+		isChunked_ = false;
+		chunksDone_ = false;
+
 		// RFC 2616 section 4.4 gives various ways for the content length to be communicated.
 		// The first is by Transfer-Encoding, the second by Content-Length, and in the case
 		// of responses requests can be delimited by closing the connection. In the case of
@@ -124,7 +180,10 @@ private:
 		}
 	}
 
+	bool isChunked_ = false;
+	bool chunksDone_ = false;
 	std::string body_;
+	std::function<std::string()> readChunk_;
 };
 
 struct HttpResponse : public HttpMessage {
