@@ -44,9 +44,9 @@ struct HttpMessage {
 	}
 
 protected:
-	void readHeadersAndBody(std::istream &ss, std::string &rawHttp) {
+	void readHeadersAndBody(std::istream &ss, std::string &rawHttp, bool socket_still_readable, bool expect_http_response) {
 		readHeaders(ss);
-		readBody(ss, rawHttp);
+		readBody(ss, rawHttp, socket_still_readable, expect_http_response);
 	}
 
 private:
@@ -90,7 +90,12 @@ private:
 		throw IncompleteHttpMessageException();
 	}
 
-	void readBody(std::istream &ss, std::string &rawHttp) {
+	void readBody(std::istream &ss, std::string &rawHttp, bool socket_still_readable, bool expect_http_response) {
+		// RFC 2616 section 4.4 gives various ways for the content length to be communicated.
+		// The first is by Transfer-Encoding, the second by Content-Length, and in the case
+		// of responses requests can be delimited by closing the connection. In the case of
+		// a request without a Content-Length, this code assumes there is no request body.
+
 		if(headers.find("Content-Length") != headers.end()) {
 			if(headers["Content-Length"].length() > 4) {
 				// TODO: this should be 413 Request Entity Too Large
@@ -104,6 +109,12 @@ private:
 				throw IncompleteHttpMessageException();
 			}
 			body_ = rawHttp.substr(ss.tellg(), contentlength);
+		} else if(expect_http_response) {
+			// No content-length header in response reading, wait until ss is closed
+			if(socket_still_readable) {
+				throw IncompleteHttpMessageException();
+			}
+			body_ = rawHttp.substr(ss.tellg());
 		}
 	}
 
@@ -123,7 +134,7 @@ struct HttpResponse : public HttpMessage {
 	: status(status), statusText(statusTextFor(status)), httpVersion("HTTP/1.1") {
 	}
 
-	HttpResponse(std::string rawHttp) {
+	HttpResponse(std::string rawHttp, bool socket_still_readable) {
 		std::stringstream ss(rawHttp);
 		std::string line;
 		
@@ -136,7 +147,7 @@ struct HttpResponse : public HttpMessage {
 			}
 		}
 
-		readHeadersAndBody(ss, rawHttp);
+		readHeadersAndBody(ss, rawHttp, socket_still_readable, true);
 	}
 
 	bool isSuccess() const {
@@ -185,7 +196,7 @@ struct HttpRequest : public HttpMessage {
 			}
 		}
 
-		readHeadersAndBody(ss, rawHttp);
+		readHeadersAndBody(ss, rawHttp, true, false);
 	}
 
 	std::string toString() const {

@@ -35,6 +35,7 @@ public:
 		boost::asio::read_until(socket, response, "\n");
 
 		std::string fullResponse;
+		bool socket_is_connected = true;
 		while(1) {
 			try {
 				std::istream is(&response);
@@ -45,13 +46,15 @@ public:
 				if(is.gcount() > 0) {
 					fullResponse.append(buffer, is.gcount());
 				}
-				HttpResponse res(fullResponse);
+				HttpResponse res(fullResponse, socket_is_connected);
 				return res;
 			} catch(HttpMessage::IncompleteHttpMessageException &) {
 				boost::system::error_code error;
 				boost::asio::read(socket, response,
 					boost::asio::transfer_at_least(1), error);
-				if(error) {
+				if(error == boost::asio::error::eof) {
+					socket_is_connected = false;
+				} else if(error) {
 					throw boost::system::system_error(error);
 				}
 			}
