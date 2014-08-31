@@ -14,7 +14,7 @@ struct BaseSocket
 	virtual void async_start(std::function<void()>) = 0;
 	virtual void async_read_some(boost::asio::mutable_buffers_1,
 		std::function<void(boost::system::error_code, size_t)>) = 0;
-	virtual void async_write(std::vector<boost::asio::const_buffer>&,
+	virtual void async_write(std::string const &,
 		std::function<void(boost::system::error_code, size_t)>) = 0;
 };
 
@@ -40,10 +40,10 @@ struct Socket : public BaseSocket
 		socket_.async_read_some(b, f);
 	}
 
-	virtual void async_write(std::vector<boost::asio::const_buffer> &b,
+	virtual void async_write(std::string const &b,
 		std::function<void(boost::system::error_code, size_t)> f)
 	{
-		boost::asio::async_write(socket_, b, f);
+		boost::asio::async_write(socket_, boost::asio::buffer(b.data(), b.size()), f);
 	}
 
 private:
@@ -80,10 +80,10 @@ struct SslSocket : public BaseSocket
 		socket_.async_read_some(b, f);
 	}
 
-	virtual void async_write(std::vector<boost::asio::const_buffer> &b,
+	virtual void async_write(std::string const &b,
 		std::function<void(boost::system::error_code, size_t)> f)
 	{
-		boost::asio::async_write(socket_, b, f);
+		boost::asio::async_write(socket_, boost::asio::buffer(b.data(), b.size()), f);
 	}
 
 private:

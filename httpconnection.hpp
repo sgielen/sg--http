@@ -59,13 +59,11 @@ private:
 	}
 
 	void respond(HttpResponsePtr &r) {
-		std::vector<boost::asio::const_buffer> sendbuffers;
 
 		const std::string sendmsg = r->toString();
-		sendbuffers.push_back(boost::asio::buffer(sendmsg));
 
 		auto that = shared_from_this();
-		socket_->async_write(sendbuffers,
+		socket_->async_write(sendmsg,
 			[that](boost::system::error_code e, size_t) {
 				if(e) {
 					std::cerr << "Write Error: " << e.message() << std::endl;
