@@ -59,11 +59,8 @@ private:
 	}
 
 	void respond(HttpResponsePtr &r) {
-
-		const std::string sendmsg = r->toString();
-
 		auto that = shared_from_this();
-		socket_->async_write(sendmsg,
+		auto write_handler =
 			[that](boost::system::error_code e, size_t) {
 				if(e) {
 					std::cerr << "Write Error: " << e.message() << std::endl;
@@ -72,8 +69,17 @@ private:
 				// TODO: if connection-type wasn't keepalive:
 				//boost::system::error_code ec;
 				//socket_.shutdown(tcp::socket::shutdown_both, ec);
-			}
-		);
+		};
+
+		// TODO: in async_write, we need to make sure the buffer exists
+		// at least until the write_handler is done executing. Currently, we
+		// only guarantee the buffer exists until respond() is done, but the
+		// write is async so this is not enough.
+		std::string headers = r->toHeaders();
+		socket_->async_write(headers, write_handler);
+
+		std::string body = r->body();
+		socket_->async_write(body, write_handler);
 	}
 
 	BaseSocketPtr socket_;

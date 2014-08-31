@@ -22,12 +22,18 @@ struct HttpMessage {
 		: std::runtime_error("Bad HTTP message: " + what) {}
 	};
 
-	std::string toText() const {
+	std::string toHeaders() const {
 		std::stringstream ss;
 		for(auto it = headers.begin(); it != headers.end(); ++it) {
 			ss << it->first << ": " << it->second << std::endl;
 		}
-		ss << std::endl << body();
+		ss << std::endl;
+		return ss.str();
+	}
+
+	std::string toString() const {
+		std::stringstream ss;
+		ss << toHeaders() << body();
 		return ss.str();
 	}
 
@@ -154,11 +160,17 @@ struct HttpResponse : public HttpMessage {
 		return status >= 200 && status < 300;
 	}
 
-	std::string toString() const {
+	std::string toHeaders() const {
 		std::stringstream ss;
 		// HTTP/1.1 200 OK
 		ss << httpVersion << " " << status << " " << statusText << std::endl;
-		ss << HttpMessage::toText();
+		ss << HttpMessage::toHeaders();
+		return ss.str();
+	}
+
+	std::string toString() const {
+		std::stringstream ss;
+		ss << toHeaders() << body();
 		return ss.str();
 	}
 };
@@ -199,11 +211,17 @@ struct HttpRequest : public HttpMessage {
 		readHeadersAndBody(ss, rawHttp, true, false);
 	}
 
-	std::string toString() const {
+	std::string toHeaders() const {
 		std::stringstream ss;
 		// GET /foo/bar HTTP/1.1
 		ss << method << " " << urlencode(uri) << " " << httpVersion << std::endl;
-		ss << HttpMessage::toText();
+		ss << HttpMessage::toHeaders();
+		return ss.str();
+	}
+
+	std::string toString() const {
+		std::stringstream ss;
+		ss << toHeaders() << body();
 		return ss.str();
 	}
 };
