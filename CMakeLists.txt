@@ -28,6 +28,8 @@ add_library(sg--http SHARED ${headers})
 target_link_libraries(sg--http PUBLIC ${Boost_LIBRARIES})
 set_target_properties(sg--http PROPERTIES LINKER_LANGUAGE CXX)
 
+add_subdirectory("tests")
+
 find_package(wubwubcmake 1)
 if(wubwubcmake_DIR)
 	include(wubwubcmake/sane_install)
