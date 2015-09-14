@@ -6,6 +6,8 @@ set("${CMAKE_PROJECT_NAME}_VERSION_MAJOR" 1)
 set("${CMAKE_PROJECT_NAME}_VERSION_MINOR" 0)
 set("${CMAKE_PROJECT_NAME}_VERSION_PATCH" 0)
 
+find_package(Boost 1.54 COMPONENTS system REQUIRED)
+
 set(headers
 	apiserver.hpp
 	httpclient.hpp
@@ -23,6 +25,7 @@ set(headers
 # Both "SHARED" and the LINKER_LANGUAGE are required because it's header only.
 # Shouldn't be necessary anymore in 3.0 where you can have arbitrary targets.
 add_library(sg--http SHARED ${headers})
+target_link_libraries(sg--http PUBLIC ${Boost_LIBRARIES})
 set_target_properties(sg--http PROPERTIES LINKER_LANGUAGE CXX)
 
 find_package(wubwubcmake 1)
