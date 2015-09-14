@@ -138,9 +138,9 @@ private:
 				}
 			}
 			if(isName) {
-				std::stringstream ss;
-				ss << "Invalid syntax on header line " << linenr;
-				throw InvalidHttpMessageException(ss.str());
+				std::stringstream errmsg;
+				errmsg << "Invalid syntax on header line " << linenr;
+				throw InvalidHttpMessageException(errmsg.str());
 			}
 			headers[name] = value;
 		}
@@ -191,12 +191,12 @@ struct HttpResponse : public HttpMessage {
 	std::string statusText;
 	std::string httpVersion;
 
-	HttpResponse(uint16_t status, std::string statusText, std::string httpVersion)
-	: status(status), statusText(statusText), httpVersion(httpVersion) {
+	HttpResponse(uint16_t status_, std::string statusText_, std::string httpVersion_)
+	: status(status_), statusText(statusText_), httpVersion(httpVersion_) {
 	}
 
-	HttpResponse(uint16_t status)
-	: status(status), statusText(statusTextFor(status)), httpVersion("HTTP/1.1") {
+	HttpResponse(uint16_t status_)
+	: status(status_), statusText(statusTextFor(status)), httpVersion("HTTP/1.1") {
 	}
 
 	HttpResponse(std::string rawHttp, bool socket_still_readable) {
@@ -239,8 +239,8 @@ struct HttpRequest : public HttpMessage {
 	std::string uri;
 	std::string httpVersion;
 
-	HttpRequest(std::string method, std::string uri)
-	: method(method), uri(uri), httpVersion("HTTP/1.1")
+	HttpRequest(std::string method_, std::string uri_)
+	: method(method_), uri(uri_), httpVersion("HTTP/1.1")
 	{}
 
 	HttpRequest(std::string rawHttp) {
