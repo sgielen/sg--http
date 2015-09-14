@@ -100,7 +100,7 @@ struct Uri {
 			hostname = uri.substr(readpos, portpos - readpos);
 			port = uri.substr(portpos + 1, endhost - portpos - 1);
 		} else {
-			hostname = uri.substr(readpos, endhost - portpos - 1);
+			hostname = uri.substr(readpos, endhost - readpos);
 		}
 		readpos = endhost;
 		size_t endpath = querypos != std::string::npos ? querypos :
