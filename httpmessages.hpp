@@ -7,6 +7,7 @@
 #include <functional>
 #include "http_global.hpp"
 #include "http_util.hpp"
+#include "uri.hpp"
 
 namespace sg { namespace http {
 
@@ -242,6 +243,15 @@ struct HttpRequest : public HttpMessage {
 	HttpRequest(std::string method_, std::string uri_)
 	: method(method_), uri(uri_), httpVersion("HTTP/1.1")
 	{}
+
+	HttpRequest(std::string m, sg::http::Uri uri_)
+	: HttpRequest(m, uri_.toPathString())
+	{
+		headers["Host"] = uri_.hostname;
+		if(!uri_.port.empty()) {
+			headers["Host"] += ":" + uri_.port;
+		}
+	}
 
 	HttpRequest(std::string rawHttp) {
 		std::stringstream ss(rawHttp);
