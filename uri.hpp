@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sstream>
+#include <stdexcept>
 
 namespace sg { namespace http {
 
