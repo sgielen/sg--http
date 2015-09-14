@@ -17,6 +17,7 @@ set(headers
 	http_util.hpp
 	socket.hpp
 	uri.hpp
+	forward.hpp
 )
 
 # Both "SHARED" and the LINKER_LANGUAGE are required because it's header only.
