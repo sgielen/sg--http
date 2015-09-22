@@ -160,9 +160,10 @@ private:
 		// a request without a Content-Length, this code assumes there is no request body.
 
 		if(headers.find("Content-Length") != headers.end()) {
-			if(headers["Content-Length"].length() > 7) {
+			if(!expect_http_response && headers["Content-Length"].length() > 7) {
 				// TODO: this should be 413 Request Entity Too Large
-				throw InvalidHttpMessageException("Content-Length is over 4 digits, refusing to process");
+				// TODO: also, the max size should be configurable
+				throw InvalidHttpMessageException("Content-Length is too long (" + headers["Content-Length"] + "), refusing to process");
 			}
 			std::stringstream clss;
 			unsigned int contentlength;
