@@ -7,6 +7,8 @@ set("${CMAKE_PROJECT_NAME}_VERSION_MINOR" 0)
 set("${CMAKE_PROJECT_NAME}_VERSION_PATCH" 0)
 
 find_package(Boost 1.54 COMPONENTS system REQUIRED)
+# Boost asio SSL headers include OpenSSL headers
+find_package(OpenSSL REQUIRED)
 
 set(headers
 	apiserver.hpp
@@ -25,7 +27,13 @@ set(headers
 # Both "SHARED" and the LINKER_LANGUAGE are required because it's header only.
 # Shouldn't be necessary anymore in 3.0 where you can have arbitrary targets.
 add_library(sg--http SHARED ${headers})
-target_link_libraries(sg--http PUBLIC ${Boost_LIBRARIES})
+if(WIN32)
+  set(SG_HTTP_LIBRARIES ${SSL_EAY} ${LIB_EAY} wsock32 ws2_32)
+elseif(UNIX)
+  set(SG_HTTP_LIBRARIES crypto ssl)
+endif()
+target_link_libraries(sg--http PUBLIC ${Boost_LIBRARIES} ${SG_HTTP_LIBRARIES})
+target_include_directories(sg--http PUBLIC ${OPENSSL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 set_target_properties(sg--http PROPERTIES LINKER_LANGUAGE CXX)
 
 add_subdirectory("tests")
