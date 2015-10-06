@@ -10,6 +10,8 @@ struct BaseSocket
 {
 	typedef boost::asio::ip::tcp tcp;
 
+	virtual ~BaseSocket() {}
+
 	virtual void async_accept(tcp::acceptor&, std::function<void(boost::system::error_code)>) = 0;
 	virtual void async_start(std::function<void()>) = 0;
 	virtual void async_read_some(boost::asio::mutable_buffers_1,
@@ -24,6 +26,8 @@ struct Socket : public BaseSocket
 	Socket(boost::asio::io_service &io_service)
 	: socket_(io_service)
 	{}
+
+	virtual ~Socket() {}
 
 	void async_accept(tcp::acceptor &acceptor, std::function<void(boost::system::error_code)> f) {
 		acceptor.async_accept(socket_, f);
