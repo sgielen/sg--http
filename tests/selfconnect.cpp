@@ -2,7 +2,7 @@
 #include <httpclient.hpp>
 #include <boost/thread.hpp>
 #include <unistd.h>
-#include <sg_test.hpp>
+#include <catch.hpp>
 #include "uri.hpp"
 
 const std::string method = "OPTIONS";
@@ -14,9 +14,8 @@ const std::string errorBody = "Invalid method/uri";
 const sg::http::Uri uri3{"http://example.org:1337/foo/bar"};
 const std::string expected_host = "example.org:1337";
 
-int main() {
+TEST_CASE("Self-connect") {
 	using namespace sg::http;
-	sg::test::Test tester(6);
 
 	std::string host = "127.0.0.1";
 	std::string port = "1337";
@@ -43,22 +42,23 @@ int main() {
 	});
 
 	sleep(1);
+
 	// Run client here
 	HttpRequest request(method, uri);
 	HttpResponse response = HttpClient::request(request, host, port);
-	tester.test(response.body() == body, "Body matches");
-	tester.test(response.headers["Content-Type"] == contentType, "Content-type matches");
+	CHECK(response.body() == body);
+	CHECK(response.headers["Content-Type"] == contentType);
 
 	HttpRequest request2(method, uri2);
 	HttpResponse response2 = HttpClient::request(request2, host, port);
-	tester.test(response2.body().substr(0, errorBody.length()) == errorBody, "Error body matches");
-	tester.test(response2.status == 400, "Status code matches");
+	CHECK(response2.body().substr(0, errorBody.length()) == errorBody);
+	CHECK(response2.status == 400);
 
 	expect_host_header = true;
 	HttpRequest request3(method, uri3);
 	HttpResponse response3 = HttpClient::request(request3, host, port);
-	tester.test(response3.status == 200, "Request with sg::http::Uri finished");
-	tester.test(response3.body() == body, "Body matches");
+	CHECK(response3.status == 200);
+	CHECK(response3.body() == body);
 
 	hs->stop();
 	t.join();

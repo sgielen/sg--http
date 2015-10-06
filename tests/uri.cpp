@@ -1,5 +1,5 @@
 #include <uri.hpp>
-#include <sg_test.hpp>
+#include <catch.hpp>
 #include <vector>
 
 struct TestInput {
@@ -12,7 +12,7 @@ struct TestInput {
 	std::string reason;
 };
 
-int main() {
+TEST_CASE("URI") {
 	using namespace sg::http;
 
 	std::vector<TestInput> tests {{
@@ -21,14 +21,14 @@ int main() {
 		{"http://sla:80/vink",   "http", "sla",   "80", "/vink", "Default port"   },
 	}};
 
-	sg::test::Test tester(tests.size() * 4);
-
 	for(auto const& test : tests){
 		Uri uri{test.full_uri};
-		tester.test(uri.scheme   == test.scheme,   test.reason);
-		tester.test(uri.hostname == test.hostname, test.reason);
-		tester.test(uri.port == test.port, test.reason);
-		tester.test(uri.path == test.path, test.reason);
+		CAPTURE(test.full_uri);
+		CAPTURE(test.reason);
+		CHECK(uri.scheme   == test.scheme);
+		CHECK(uri.hostname == test.hostname);
+		CHECK(uri.port == test.port);
+		CHECK(uri.path == test.path);
 	}
 }
 

@@ -2,11 +2,10 @@
 #include <httpclient.hpp>
 #include <boost/thread.hpp>
 #include <unistd.h>
-#include <sg_test.hpp>
+#include <catch.hpp>
 
-int main() {
+TEST_CASE("Streaming self-connect") {
 	using namespace sg::http;
-	sg::test::Test tester(1);
 
 	std::string host = "127.0.0.1";
 	std::string port = "1337";
@@ -37,7 +36,7 @@ int main() {
 	// Run client here
 	HttpRequest request("GET", "/");
 	HttpResponse response = HttpClient::request(request, host, port);
-	tester.test(response.body() == "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n", "Body matches");
+	CHECK(response.body() == "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n");
 
 	hs->stop();
 	t.join();

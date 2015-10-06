@@ -11,15 +11,16 @@ endif()
 find_package(Boost COMPONENTS thread system regex REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/sg--test/")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
-add_executable(selfconnect selfconnect.cpp)
-target_link_libraries(selfconnect ${Boost_LIBRARIES} sg--http)
 
-add_executable(router router.cpp)
-target_link_libraries(router ${Boost_LIBRARIES} sg--http)
+add_executable(checker selfconnect.cpp router.cpp streaming.cpp check.cpp uri.cpp)
+target_link_libraries(checker ${Boost_LIBRARIES} sg--http)
 
-add_executable(streaming streaming.cpp)
-target_link_libraries(streaming ${Boost_LIBRARIES} sg--http)
+enable_testing()
+add_test(NAME check WORKING_DIRECTORY ${CMAKE_BINARY_DIR} COMMAND checker)
 
-add_executable(uri uri.cpp)
+add_custom_target(check
+	DEPENDS checker
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+	COMMAND tests/checker
+)

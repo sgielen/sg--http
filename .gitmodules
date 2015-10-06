@@ -1,3 +1,0 @@
-[submodule "tests/sg--test"]
-	path = tests/sg--test
-	url = https://github.com/sgielen/sg--test.git
