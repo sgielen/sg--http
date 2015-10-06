@@ -15,15 +15,15 @@ protected:
 	std::map<std::string, std::string> headers_;
 
 public:
-	HttpException(uint16_t code, HttpRequestPtr req, std::string what)
-	: std::runtime_error(what)
-	, code_(code)
-	, req_(req) {}
+	HttpException(uint16_t c, HttpRequestPtr r, std::string w)
+	: std::runtime_error(w)
+	, code_(c)
+	, req_(r) {}
 
-	HttpException(uint16_t code, HttpRequestPtr req)
-	: std::runtime_error(statusTextFor(code))
-	, code_(code)
-	, req_(req) {}
+	HttpException(uint16_t c, HttpRequestPtr r)
+	: std::runtime_error(statusTextFor(c))
+	, code_(c)
+	, req_(r) {}
 
 	std::map<std::string, std::string> headers() const {
 		return headers_;
@@ -47,10 +47,10 @@ public:
 template <uint16_t Code>
 class HttpExceptionTempl : public HttpException {
 public:
-	HttpExceptionTempl(HttpRequestPtr req, std::string what)
-	: HttpException(Code, req, what) {}
-	HttpExceptionTempl(HttpRequestPtr req)
-	: HttpException(Code, req) {}
+	HttpExceptionTempl(HttpRequestPtr r, std::string w)
+	: HttpException(Code, r, w) {}
+	HttpExceptionTempl(HttpRequestPtr r)
+	: HttpException(Code, r) {}
 };
 
 typedef HttpExceptionTempl<400> HttpBadRequest;
@@ -67,9 +67,9 @@ class HttpUnauthorized : public HttpExceptionTempl<401> {
 	}
 
 public:
-	HttpUnauthorized(HttpRequestPtr req) : Parent(req) {}
-	HttpUnauthorized(HttpRequestPtr req, std::string what) : Parent(req, what) {}
-	HttpUnauthorized(HttpRequestPtr req, std::string what, std::string realm) : Parent(req, what) {
+	HttpUnauthorized(HttpRequestPtr r) : Parent(r) {}
+	HttpUnauthorized(HttpRequestPtr r, std::string w) : Parent(r, w) {}
+	HttpUnauthorized(HttpRequestPtr r, std::string w, std::string realm) : Parent(r, w) {
 		add_auth_header(realm);
 	}
 };

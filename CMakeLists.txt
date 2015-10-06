@@ -6,6 +6,13 @@ set("${CMAKE_PROJECT_NAME}_VERSION_MAJOR" 1)
 set("${CMAKE_PROJECT_NAME}_VERSION_MINOR" 0)
 set("${CMAKE_PROJECT_NAME}_VERSION_PATCH" 0)
 
+find_package(wubwubcmake 1)
+if(wubwubcmake_DIR)
+	include(wubwubcmake/sane_install)
+	include(wubwubcmake/warning_settings)
+	add_sane_warning_flags()
+endif()
+
 find_package(Boost 1.54 COMPONENTS system REQUIRED)
 # Boost asio SSL headers include OpenSSL headers
 find_package(OpenSSL REQUIRED)
@@ -38,8 +45,6 @@ set_target_properties(sg--http PROPERTIES LINKER_LANGUAGE CXX)
 
 add_subdirectory("tests")
 
-find_package(wubwubcmake 1)
 if(wubwubcmake_DIR)
-	include(wubwubcmake/sane_install)
 	sane_install(TARGETS sg--http HEADERS ${headers})
 endif()

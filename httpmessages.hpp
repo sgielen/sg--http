@@ -20,8 +20,8 @@ struct HttpMessage {
 	};
 
 	struct InvalidHttpMessageException : public std::runtime_error {
-		InvalidHttpMessageException(std::string what)
-		: std::runtime_error("Bad HTTP message: " + what) {}
+		InvalidHttpMessageException(std::string w)
+		: std::runtime_error("Bad HTTP message: " + w) {}
 	};
 
 	struct NoChunksLeftException : public std::runtime_error {
@@ -85,14 +85,14 @@ struct HttpMessage {
 		return body_;
 	}
 
-	void setBody(std::string body, std::string contenttype) {
+	void setBody(std::string b, std::string contenttype) {
 		headers["Content-Type"] = contenttype;
 		std::stringstream cl;
-		cl << body.length();
+		cl << b.length();
 		headers["Content-Length"] = cl.str();
 		isChunked_ = false;
 		chunksDone_ = false;
-		body_ = body;
+		body_ = b;
 	}
 
 	void setBodyChunkFunction(std::function<std::string()> function, std::string contenttype) {

@@ -16,7 +16,7 @@ struct ApiRouter {
 	ApiRouter(ApiRoute route) {
 		addRoute(route);
 	}
-	ApiRouter(std::vector<ApiRoute> routes) : routes(routes) {
+	ApiRouter(std::vector<ApiRoute> r) : routes(r) {
 	}
 
 	void addRoute(ApiRoute const &r) {
@@ -24,8 +24,8 @@ struct ApiRouter {
 	}
 
 	HttpResponsePtr handle(HttpRequestPtr request) const {
-		return request_exception_wrapper(request, [this](HttpRequestPtr request) -> HttpResponsePtr {
-			return handle_throws(request);
+		return request_exception_wrapper(request, [this](HttpRequestPtr r) -> HttpResponsePtr {
+			return handle_throws(r);
 		});
 	}
 
