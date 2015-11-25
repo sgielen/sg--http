@@ -23,6 +23,18 @@ inline std::string urldecode(std::string s) {
 	return s;
 }
 
+inline std::string read_line(std::string const &body, size_t &pos) {
+	std::string line;
+	while(pos < body.length()) {
+		char c = body[pos++];
+		line += c;
+		if(c == '\n') {
+			break;
+		}
+	}
+	return line;
+}
+
 inline std::string statusTextFor(uint16_t status) {
 	// ref: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 	switch(status) {

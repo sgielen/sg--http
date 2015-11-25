@@ -104,18 +104,18 @@ struct HttpMessage {
 	}
 
 protected:
-	void readHeadersAndBody(std::istream &ss, std::string const &rawHttp, bool socket_still_readable, bool expect_http_response) {
-		readHeaders(ss);
-		readBody(ss, rawHttp, socket_still_readable, expect_http_response);
+	void readHeadersAndBody(std::string const &rawHttp, size_t &pos, bool socket_still_readable, bool expect_http_response) {
+		readHeaders(rawHttp, pos);
+		readBody(rawHttp, pos, socket_still_readable, expect_http_response);
 	}
 
 private:
-	void readHeaders(std::istream &ss) {
+	void readHeaders(std::string const &http, size_t &pos) {
 		int linenr = 1;
-		std::string line;
-		while(std::getline(ss, line)) {
+		while(pos < http.length()) {
+			std::string line = read_line(http, pos);
 			linenr++;
-			if(line == "" || line == "\r") {
+			if(line == "\n" || line == "\r\n") {
 				return;
 			}
 			std::string name, value;
@@ -123,7 +123,10 @@ private:
 			bool trimSpaces = false;
 			for(unsigned i = 0; i < line.length(); ++i) {
 				char c = line[i];
-				if(i + 1 == line.length() && c == '\r') {
+				if(i + 2 == line.length() && c == '\r' && line[i+1] == '\n') {
+					// skip
+					break;
+				} else if(i + 1 == line.length() && c == '\n') {
 					// skip
 					break;
 				} else if(isName && c == ':') {
@@ -150,7 +153,7 @@ private:
 		throw IncompleteHttpMessageException();
 	}
 
-	void readBody(std::istream &ss, std::string const &rawHttp, bool socket_still_readable, bool expect_http_response) {
+	void readBody(std::string const &rawHttp, size_t &pos, bool socket_still_readable, bool expect_http_response) {
 		isChunked_ = false;
 		chunksDone_ = false;
 
@@ -169,16 +172,16 @@ private:
 			unsigned int contentlength;
 			clss << headers["Content-Length"];
 			clss >> contentlength;
-			if(rawHttp.length() < unsigned(contentlength + ss.tellg())) {
+			if(rawHttp.length() < unsigned(contentlength + pos)) {
 				throw IncompleteHttpMessageException();
 			}
-			body_ = rawHttp.substr(ss.tellg(), contentlength);
+			body_ = rawHttp.substr(pos, contentlength);
 		} else if(expect_http_response) {
 			// No content-length header in response reading, wait until ss is closed
 			if(socket_still_readable) {
 				throw IncompleteHttpMessageException();
 			}
-			body_ = rawHttp.substr(ss.tellg());
+			body_ = rawHttp.substr(pos);
 		}
 	}
 
@@ -202,11 +205,10 @@ struct HttpResponse : public HttpMessage {
 	}
 
 	HttpResponse(std::string const &rawHttp, bool socket_still_readable) {
-		std::istringstream ss(rawHttp);
-		std::string line;
+		size_t pos = 0;
 		
 		{ // First line: <httpVersion> <status> <code>
-			std::getline(ss, line);
+			std::string line = read_line(rawHttp, pos);
 			std::stringstream firstline(line);
 			firstline >> httpVersion >> status >> statusText;
 			if(httpVersion != "HTTP/1.0" && httpVersion != "HTTP/1.1") {
@@ -214,7 +216,7 @@ struct HttpResponse : public HttpMessage {
 			}
 		}
 
-		readHeadersAndBody(ss, rawHttp, socket_still_readable, true);
+		readHeadersAndBody(rawHttp, pos, socket_still_readable, true);
 	}
 
 	bool isSuccess() const {
@@ -254,21 +256,12 @@ struct HttpRequest : public HttpMessage {
 		}
 	}
 
-	HttpRequest(std::string rawHttp) {
+	HttpRequest(std::string const &rawHttp) {
+		size_t pos = 0;
 		std::stringstream ss(rawHttp);
 		{ // First line: <method> <uri> <httpver>
-			std::string line;
-			char last;
-			bool has_eol = false;
-			while(ss.get(last)) {
-				if(last == '\n') {
-					has_eol = true;
-					break;
-				} else {
-					line.push_back(last);
-				}
-			}
-			if(!has_eol) {
+			std::string line = read_line(rawHttp, pos);
+			if(line[line.length() - 1] != '\n') {
 				throw IncompleteHttpMessageException();
 			}
 			std::stringstream firstline(line);
@@ -278,7 +271,7 @@ struct HttpRequest : public HttpMessage {
 			}
 		}
 
-		readHeadersAndBody(ss, rawHttp, true, false);
+		readHeadersAndBody(rawHttp, pos, true, false);
 	}
 
 	std::string toHeaders() const {
