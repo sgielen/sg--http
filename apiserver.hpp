@@ -42,7 +42,7 @@ struct ApiRouter {
 				found_uri_match = true;
 				continue;
 			}
-			std::vector<std::string> captures;
+			std::vector<std::string> captures(match.size() - 1);
 			// smatch begins with the full match, we only want the captures, hence + 1
 			std::copy(match.begin() + 1, match.end(), captures.begin());
 			return route.handler(request, captures);
