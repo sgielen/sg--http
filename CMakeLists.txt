@@ -13,7 +13,7 @@ if(wubwubcmake_DIR)
 	add_sane_warning_flags()
 endif()
 
-find_package(Boost 1.54 COMPONENTS system REQUIRED)
+find_package(Boost 1.54 COMPONENTS system thread REQUIRED)
 # Boost asio SSL headers include OpenSSL headers
 find_package(OpenSSL REQUIRED)
 
@@ -44,6 +44,7 @@ target_include_directories(sg--http PUBLIC ${OPENSSL_INCLUDE_DIR} ${Boost_INCLUD
 set_target_properties(sg--http PROPERTIES LINKER_LANGUAGE CXX)
 
 add_subdirectory("tests")
+add_subdirectory("examples")
 
 if(wubwubcmake_DIR)
 	sane_install(TARGETS sg--http HEADERS ${headers})
