@@ -104,7 +104,7 @@ struct HttpMessage {
 	}
 
 protected:
-	void readHeadersAndBody(std::istream &ss, std::string &rawHttp, bool socket_still_readable, bool expect_http_response) {
+	void readHeadersAndBody(std::istream &ss, std::string const &rawHttp, bool socket_still_readable, bool expect_http_response) {
 		readHeaders(ss);
 		readBody(ss, rawHttp, socket_still_readable, expect_http_response);
 	}
@@ -150,7 +150,7 @@ private:
 		throw IncompleteHttpMessageException();
 	}
 
-	void readBody(std::istream &ss, std::string &rawHttp, bool socket_still_readable, bool expect_http_response) {
+	void readBody(std::istream &ss, std::string const &rawHttp, bool socket_still_readable, bool expect_http_response) {
 		isChunked_ = false;
 		chunksDone_ = false;
 
@@ -201,8 +201,8 @@ struct HttpResponse : public HttpMessage {
 	: status(status_), statusText(statusTextFor(status)), httpVersion("HTTP/1.1") {
 	}
 
-	HttpResponse(std::string rawHttp, bool socket_still_readable) {
-		std::stringstream ss(rawHttp);
+	HttpResponse(std::string const &rawHttp, bool socket_still_readable) {
+		std::istringstream ss(rawHttp);
 		std::string line;
 		
 		{ // First line: <httpVersion> <status> <code>
