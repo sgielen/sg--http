@@ -46,7 +46,7 @@ if(SGHTTP_USE_SSL)
 	if(WIN32)
 		target_link_libraries(sg--http INTERFACE ${SSL_EAY} ${LIB_EAY})
 	elseif(UNIX)
-		target_link_libraries(sg--http crypto ssl)
+		target_link_libraries(sg--http INTERFACE crypto ssl)
 	endif()
 endif()
 
