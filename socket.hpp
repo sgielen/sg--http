@@ -2,7 +2,9 @@
 
 #include <iostream>
 #include <boost/asio.hpp>
+#ifdef SG_HTTP_SSL
 #include <boost/asio/ssl.hpp>
+#endif
 
 namespace sg { namespace http {
 
@@ -60,6 +62,7 @@ private:
 	tcp::socket socket_;
 };
 
+#ifdef SG_HTTP_SSL
 struct SslSocket : public BaseSocket
 {
 	SslSocket(boost::asio::io_service &io_service,
@@ -105,5 +108,6 @@ private:
 	typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
 	ssl_socket socket_;
 };
+#endif
 
 }}

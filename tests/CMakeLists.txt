@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.6)
+find_package(wubwubcmake 1)
+if(wubwubcmake_DIR)
+	include(wubwubcmake/warning_settings)
+	add_sane_warning_flags()
+endif()
 add_definitions("-std=c++11")
-add_definitions("-Wall -Wextra")
 
 option(USE_LIBCPP "Use libc++ (Mac OS X only)" OFF)
 if(USE_LIBCPP)

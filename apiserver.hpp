@@ -62,10 +62,12 @@ private:
 
 class ApiServer : public HttpServer {
 public:
+#ifdef SG_HTTP_SSL
 	ApiServer(std::string address, std::string port,
 		size_t thread_pool_size, SslContext context)
 	: HttpServer(address, port, thread_pool_size, std::move(context), handler())
 	{}
+#endif
 
 	ApiServer(std::string address, std::string port,
 		size_t thread_pool_size)

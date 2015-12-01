@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0)
 
 project(sg--http)
 
@@ -14,8 +14,11 @@ if(wubwubcmake_DIR)
 endif()
 
 find_package(Boost 1.54 COMPONENTS system thread REQUIRED)
-# Boost asio SSL headers include OpenSSL headers
-find_package(OpenSSL REQUIRED)
+
+option(SGHTTP_USE_SSL "Whether or not to enable SSL support" ON)
+if(SGHTTP_USE_SSL)
+	find_package(OpenSSL REQUIRED)
+endif()
 
 set(headers
 	apiserver.hpp
@@ -31,17 +34,24 @@ set(headers
 	forward.hpp
 )
 
-# Both "SHARED" and the LINKER_LANGUAGE are required because it's header only.
-# Shouldn't be necessary anymore in 3.0 where you can have arbitrary targets.
-add_library(sg--http SHARED ${headers})
+add_library(sg--http INTERFACE)
+
 if(WIN32)
-  set(SG_HTTP_LIBRARIES ${SSL_EAY} ${LIB_EAY} wsock32 ws2_32)
-elseif(UNIX)
-  set(SG_HTTP_LIBRARIES crypto ssl)
+	target_link_libraries(sg--http INTERFACE wsock32 ws2_32)
 endif()
-target_link_libraries(sg--http PUBLIC ${Boost_LIBRARIES} ${SG_HTTP_LIBRARIES})
-target_include_directories(sg--http PUBLIC ${OPENSSL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-set_target_properties(sg--http PROPERTIES LINKER_LANGUAGE CXX)
+
+if(SGHTTP_USE_SSL)
+	target_compile_definitions(sg--http INTERFACE SG_HTTP_SSL)
+	target_include_directories(sg--http INTERFACE ${OPENSSL_INCLUDE_DIR})
+	if(WIN32)
+		target_link_libraries(sg--http INTERFACE ${SSL_EAY} ${LIB_EAY})
+	elseif(UNIX)
+		target_link_libraries(sg--http crypto ssl)
+	endif()
+endif()
+
+target_link_libraries(sg--http INTERFACE ${Boost_LIBRARIES})
+target_include_directories(sg--http INTERFACE ${Boost_INCLUDE_DIRS})
 
 add_subdirectory("tests")
 add_subdirectory("examples")

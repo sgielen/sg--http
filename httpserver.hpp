@@ -12,10 +12,14 @@
 
 namespace sg { namespace http {
 
+#ifdef SG_HTTP_SSL
 typedef std::unique_ptr<boost::asio::ssl::context> SslContext;
+#endif
 
 class HttpServer {
 public:
+
+#ifdef SG_HTTP_SSL
 	HttpServer(std::string address, std::string port,
 		size_t thread_pool_size, SslContext context,
 		RequestHandler delegate)
@@ -28,6 +32,7 @@ public:
 		init_acceptor(address, port);
 		start_accept();
 	}
+#endif
 
 	HttpServer(std::string address, std::string port,
 		size_t thread_pool_size, RequestHandler delegate)
@@ -86,7 +91,11 @@ private:
 	void start_accept() {
 		BaseSocketPtr sock;
 		if(ssl_) {
+#ifdef SG_HTTP_SSL
 			sock.reset(new SslSocket(io_service_, *ssl_context_));
+#else
+			throw std::runtime_error("Trying to initialize SSL socket on sg--http built without SSL support.");
+#endif
 		} else {
 			sock.reset(new Socket(io_service_));
 		}
@@ -108,7 +117,9 @@ private:
 	tcp::acceptor acceptor_;
 	size_t thread_pool_size_;
 	RequestHandler delegate_;
+#ifdef SG_HTTP_SSL
 	SslContext ssl_context_;
+#endif
 	bool ssl_;
 };
 

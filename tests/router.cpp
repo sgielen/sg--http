@@ -1,5 +1,4 @@
 #include <apiserver.hpp>
-#include <unistd.h>
 #include <catch.hpp>
 
 using namespace sg::http;

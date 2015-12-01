@@ -32,9 +32,9 @@ struct HttpMessage {
 	std::string toHeaders() const {
 		std::stringstream ss;
 		for(auto it = headers.begin(); it != headers.end(); ++it) {
-			ss << it->first << ": " << it->second << std::endl;
+			ss << it->first << ": " << it->second << "\r\n";
 		}
-		ss << std::endl;
+		ss << "\r\n";
 		return ss.str();
 	}
 
@@ -226,7 +226,7 @@ struct HttpResponse : public HttpMessage {
 	std::string toHeaders() const {
 		std::stringstream ss;
 		// HTTP/1.1 200 OK
-		ss << httpVersion << " " << status << " " << statusText << std::endl;
+		ss << httpVersion << " " << status << " " << statusText << "\r\n";
 		ss << HttpMessage::toHeaders();
 		return ss.str();
 	}
@@ -277,7 +277,7 @@ struct HttpRequest : public HttpMessage {
 	std::string toHeaders() const {
 		std::stringstream ss;
 		// GET /foo/bar HTTP/1.1
-		ss << method << " " << urlencode(uri) << " " << httpVersion << std::endl;
+		ss << method << " " << urlencode(uri) << " " << httpVersion << "\r\n";
 		ss << HttpMessage::toHeaders();
 		return ss.str();
 	}

@@ -1,8 +1,8 @@
 #include <httpserver.hpp>
 #include <httpclient.hpp>
 #include <boost/thread.hpp>
-#include <unistd.h>
 #include <catch.hpp>
+#include <thread>
 #include "uri.hpp"
 
 const std::string method = "OPTIONS";
@@ -41,7 +41,7 @@ TEST_CASE("Self-connect") {
 		hs->run();
 	});
 
-	sleep(1);
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 
 	// Run client here
 	HttpRequest request(method, uri);

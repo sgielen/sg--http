@@ -1,8 +1,8 @@
 #include <httpserver.hpp>
 #include <httpclient.hpp>
 #include <boost/thread.hpp>
-#include <unistd.h>
 #include <catch.hpp>
+#include <thread>
 
 TEST_CASE("Streaming self-connect") {
 	using namespace sg::http;
@@ -19,7 +19,7 @@ TEST_CASE("Streaming self-connect") {
 			if(bodychunk == 10) {
 				throw sg::http::HttpMessage::NoChunksLeftException();
 			}
-			sleep(1);
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 			std::stringstream ss;
 			ss << ++bodychunk << std::endl;
 			return ss.str();
