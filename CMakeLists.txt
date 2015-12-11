@@ -46,7 +46,9 @@ if(SGHTTP_USE_SSL)
 	if(WIN32)
 		target_link_libraries(sg--http INTERFACE ${SSL_EAY} ${LIB_EAY})
 	elseif(UNIX)
-		target_link_libraries(sg--http INTERFACE crypto ssl)
+		# Pthread is a workaround for when boost-thread doesn't link it
+		# Encountered it on some machine.
+		target_link_libraries(sg--http INTERFACE crypto ssl pthread)
 	endif()
 endif()
 
