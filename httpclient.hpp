@@ -7,6 +7,7 @@
 #include <boost/asio.hpp>
 #include "http_global.hpp"
 #include "httpmessages.hpp"
+#include "socket.hpp"
 #include "uri.hpp"
 
 namespace sg { namespace http {
