@@ -240,15 +240,20 @@ struct HttpResponse : public HttpMessage {
 
 struct HttpRequest : public HttpMessage {
 	std::string method;
+	std::string scheme;
 	std::string uri;
 	std::string httpVersion;
 
+	HttpRequest(std::string method_, std::string scheme_, std::string uri_)
+	: method(method_), scheme(scheme_), uri(uri_), httpVersion("HTTP/1.1")
+	{}
+
 	HttpRequest(std::string method_, std::string uri_)
-	: method(method_), uri(uri_), httpVersion("HTTP/1.1")
+	: HttpRequest(method_, "http", uri_)
 	{}
 
 	HttpRequest(std::string m, sg::http::Uri uri_)
-	: HttpRequest(m, uri_.toPathString())
+	: HttpRequest(m, uri_.scheme, uri_.toPathString())
 	{
 		headers["Host"] = uri_.hostname;
 		if(!uri_.port.empty()) {

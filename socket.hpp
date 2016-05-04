@@ -11,6 +11,7 @@ namespace sg { namespace http {
 struct BaseSocket
 {
 	typedef boost::asio::ip::tcp tcp;
+	typedef boost::asio::detail::consuming_buffers<boost::asio::const_buffer, boost::asio::const_buffers_1> const_buffers;
 
 	virtual ~BaseSocket() {}
 
@@ -20,6 +21,10 @@ struct BaseSocket
 		std::function<void(boost::system::error_code, size_t)>) = 0;
 	virtual void async_write(std::string const &,
 		std::function<void(boost::system::error_code, size_t)>) = 0;
+
+	virtual void connect(boost::asio::ip::basic_resolver<boost::asio::ip::tcp>::iterator&) = 0;
+	virtual size_t write_some(const_buffers, boost::system::error_code&) = 0;
+	virtual size_t read_some(boost::asio::mutable_buffers_1, boost::system::error_code&) = 0;
 	virtual void shutdown(boost::asio::socket_base::shutdown_type type, boost::system::error_code &) = 0;
 };
 
@@ -51,6 +56,21 @@ struct Socket : public BaseSocket
 		std::function<void(boost::system::error_code, size_t)> f)
 	{
 		boost::asio::async_write(socket_, boost::asio::buffer(b.data(), b.size()), f);
+	}
+
+	virtual void connect(boost::asio::ip::basic_resolver<boost::asio::ip::tcp>::iterator &it)
+	{
+		boost::asio::connect(socket_, it);
+	}
+
+	virtual size_t write_some(const_buffers buf, boost::system::error_code &ec)
+	{
+		return socket_.write_some(buf, ec);
+	}
+
+	virtual size_t read_some(boost::asio::mutable_buffers_1 buf, boost::system::error_code &ec)
+	{
+		return socket_.read_some(buf, ec);
 	}
 
 	virtual void shutdown(boost::asio::socket_base::shutdown_type type, boost::system::error_code &ec)
@@ -99,13 +119,42 @@ struct SslSocket : public BaseSocket
 		boost::asio::async_write(socket_, boost::asio::buffer(b.data(), b.size()), f);
 	}
 
+	virtual void connect(boost::asio::ip::basic_resolver<boost::asio::ip::tcp>::iterator &it)
+	{
+		boost::asio::connect(socket_.lowest_layer(), it);
+	}
+
+	virtual size_t write_some(const_buffers buf, boost::system::error_code &ec)
+	{
+		return socket_.write_some(buf, ec);
+	}
+
+	virtual size_t read_some(boost::asio::mutable_buffers_1 buf, boost::system::error_code &ec)
+	{
+		return socket_.read_some(buf, ec);
+	}
+
 	virtual void shutdown(boost::asio::socket_base::shutdown_type type, boost::system::error_code &ec)
 	{
 		socket_.lowest_layer().shutdown(type, ec);
 	}
 
-private:
+	void set_sni_hostname(std::string hostname) {
+		SSL_set_tlsext_host_name(socket_.native_handle(), hostname.c_str());
+	}
+
+	template <typename VerifyCallback>
+	void set_verify_mode(int mode, VerifyCallback callback) {
+		socket_.set_verify_mode(mode);
+		socket_.set_verify_callback(callback);
+	}
+
+	void ssl_handshake(boost::asio::ssl::stream_base::handshake_type mode) {
+		socket_.handshake(mode);
+	}
+
 	typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
+private:
 	ssl_socket socket_;
 };
 #endif

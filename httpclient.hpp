@@ -16,23 +16,51 @@ public:
 	typedef boost::asio::ip::tcp tcp;
 
 	static HttpResponse request(HttpRequest req, std::string host, std::string port) {
+		if(req.scheme.empty()) {
+			req.scheme = "http";
+		}
+		if(port.empty()) {
+			port = req.scheme;
+		}
+
 		boost::asio::io_service io_service;
 		tcp::resolver resolver(io_service);
 		tcp::resolver::query query(host, port);
 		tcp::resolver::iterator endpoint_it = resolver.resolve(query);
 
+		BaseSocketPtr socket;
+		if(req.scheme == "https") {
+#if defined(SG_HTTP_SSL)
+			boost::asio::ssl::context context(boost::asio::ssl::context::sslv23);
+			context.set_default_verify_paths();
+			socket.reset(new SslSocket(io_service, context));
+#else
+			throw std::runtime_error("sg::http was compiled without SSL support, but a https:// URL was used");
+#endif
+		} else {
+			socket.reset(new Socket(io_service));
+		}
+
 		// Try every possible endpoint until we can connect to one
-		tcp::socket socket(io_service);
-		boost::asio::connect(socket, endpoint_it);
+		socket->connect(endpoint_it);
+
+#if defined(SG_HTTP_SSL)
+		if(req.scheme == "https") {
+			SslSocket *sock = reinterpret_cast<SslSocket*>(socket.get());
+			sock->set_sni_hostname(host);
+			sock->set_verify_mode(boost::asio::ssl::verify_peer, boost::asio::ssl::rfc2818_verification(host));
+			sock->ssl_handshake(SslSocket::ssl_socket::client);
+		}
+#endif
 
 		boost::asio::streambuf request;
 		std::ostream request_stream(&request);
 		request_stream << req.toString();
 
-		boost::asio::write(socket, request);
+		boost::asio::write(*socket, request);
 
 		boost::asio::streambuf response;
-		boost::asio::read_until(socket, response, "\n");
+		boost::asio::read_until(*socket, response, "\n");
 
 		std::string fullResponse;
 		bool socket_is_connected = true;
@@ -50,7 +78,7 @@ public:
 				return res;
 			} catch(HttpMessage::IncompleteHttpMessageException &) {
 				boost::system::error_code error;
-				boost::asio::read(socket, response,
+				boost::asio::read(*socket, response,
 					boost::asio::transfer_at_least(1), error);
 				if(error == boost::asio::error::eof) {
 					socket_is_connected = false;
