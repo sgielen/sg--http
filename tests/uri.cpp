@@ -19,6 +19,8 @@ TEST_CASE("URI") {
 		{"http://sla/",          "http", "sla",     "", "/",     "Scheme and host"},
 		{"http://sla:1337/vink", "http", "sla", "1337", "/vink", "Plain parse"    },
 		{"http://sla:80/vink",   "http", "sla",   "80", "/vink", "Default port"   },
+		// Weird cases
+		{"http://sla",           "http", "sla",     "", "/",     "No path given"},
 	}};
 
 	for(auto const& test : tests){

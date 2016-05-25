@@ -109,6 +109,8 @@ struct Uri {
 		if(slashpos != std::string::npos && endpath > slashpos) {
 			path = uri.substr(readpos, endpath - readpos);
 			readpos = endpath;
+		} else {
+			path = "/"; // default path
 		}
 		size_t endquery = locpos != std::string::npos ? locpos : uri.length();
 		if(querypos != std::string::npos && endquery > querypos) {
