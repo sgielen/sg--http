@@ -4,7 +4,6 @@ if(wubwubcmake_DIR)
 	include(wubwubcmake/warning_settings)
 	add_sane_warning_flags()
 endif()
-add_definitions("-std=c++11")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
 

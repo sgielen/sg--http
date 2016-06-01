@@ -13,6 +13,10 @@ if(wubwubcmake_DIR)
 	add_sane_warning_flags()
 endif()
 
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 find_package(Boost 1.54 COMPONENTS system thread REQUIRED)
 
 option(SGHTTP_USE_SSL "Whether or not to enable SSL support" ON)

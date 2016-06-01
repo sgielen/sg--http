@@ -5,9 +5,6 @@ if(wubwubcmake_DIR)
 	add_sane_warning_flags()
 endif()
 
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 find_package(Boost COMPONENTS thread system regex REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
@@ -15,7 +12,6 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
 
 add_executable(checker selfconnect.cpp router.cpp streaming.cpp check.cpp uri.cpp)
 target_link_libraries(checker ${Boost_LIBRARIES} sg--http)
-set_property(TARGET checker PROPERTY CXX_STANDARD 11)
 
 enable_testing()
 add_test(NAME check WORKING_DIRECTORY ${CMAKE_BINARY_DIR} COMMAND checker)
