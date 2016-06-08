@@ -15,6 +15,8 @@ struct BaseSocket
 
 	virtual ~BaseSocket() {}
 
+	virtual void async_connect(boost::asio::ip::basic_resolver<boost::asio::ip::tcp>::iterator&,
+		std::function<void(boost::system::error_code, tcp::resolver::iterator)>) = 0;
 	virtual void async_accept(tcp::acceptor&, std::function<void(boost::system::error_code)>) = 0;
 	virtual void async_start(std::function<void()>) = 0;
 	virtual void async_read_some(boost::asio::mutable_buffers_1,
@@ -26,6 +28,9 @@ struct BaseSocket
 	virtual size_t write_some(const_buffers, boost::system::error_code&) = 0;
 	virtual size_t read_some(boost::asio::mutable_buffers_1, boost::system::error_code&) = 0;
 	virtual void shutdown(boost::asio::socket_base::shutdown_type type, boost::system::error_code &) = 0;
+
+	virtual bool is_open() = 0;
+	virtual void close() = 0;
 };
 
 struct Socket : public BaseSocket
@@ -35,6 +40,11 @@ struct Socket : public BaseSocket
 	{}
 
 	virtual ~Socket() {}
+
+	void async_connect(boost::asio::ip::basic_resolver<boost::asio::ip::tcp>::iterator &it,
+		std::function<void(boost::system::error_code, tcp::resolver::iterator)> f) {
+		boost::asio::async_connect(socket_, it, f);
+	}
 
 	void async_accept(tcp::acceptor &acceptor, std::function<void(boost::system::error_code)> f) {
 		acceptor.async_accept(socket_, f);
@@ -78,6 +88,16 @@ struct Socket : public BaseSocket
 		socket_.shutdown(type, ec);
 	}
 
+	virtual bool is_open()
+	{
+		return socket_.is_open();
+	}
+
+	virtual void close()
+	{
+		socket_.close();
+	}
+
 private:
 	tcp::socket socket_;
 };
@@ -89,6 +109,11 @@ struct SslSocket : public BaseSocket
 	    boost::asio::ssl::context &context)
 	: socket_(io_service, context)
 	{}
+
+	void async_connect(boost::asio::ip::basic_resolver<boost::asio::ip::tcp>::iterator &it,
+		std::function<void(boost::system::error_code, tcp::resolver::iterator)> f) {
+		boost::asio::async_connect(socket_.lowest_layer(), it, f);
+	}
 
 	void async_accept(tcp::acceptor &acceptor, std::function<void(boost::system::error_code)> f) {
 		acceptor.async_accept(socket_.lowest_layer(), f);
@@ -151,6 +176,21 @@ struct SslSocket : public BaseSocket
 
 	void ssl_handshake(boost::asio::ssl::stream_base::handshake_type mode) {
 		socket_.handshake(mode);
+	}
+
+	void async_ssl_handshake(boost::asio::ssl::stream_base::handshake_type mode,
+		std::function<void(boost::system::error_code)> f) {
+		socket_.async_handshake(mode, f);
+	}
+
+	virtual bool is_open()
+	{
+		return socket_.lowest_layer().is_open();
+	}
+
+	virtual void close()
+	{
+		socket_.lowest_layer().close();
 	}
 
 	typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;

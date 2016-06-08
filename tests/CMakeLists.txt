@@ -10,7 +10,14 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
 
-add_executable(checker selfconnect.cpp router.cpp streaming.cpp check.cpp uri.cpp)
+add_executable(checker
+  selfconnect.cpp
+  router.cpp
+  streaming.cpp
+  check.cpp
+  uri.cpp
+  timeout.cpp
+)
 target_link_libraries(checker ${Boost_LIBRARIES} sg--http)
 
 enable_testing()
