@@ -48,17 +48,21 @@ TEST_CASE("Self-connect") {
 	HttpResponse response = HttpClient::request(request, host, port);
 	CHECK(response.body() == body);
 	CHECK(response.headers["Content-Type"] == contentType);
+	CHECK(response.status == 200);
+	CHECK(response.statusText == "OK");
 
 	HttpRequest request2(method, uri2);
 	HttpResponse response2 = HttpClient::request(request2, host, port);
 	CHECK(response2.body().substr(0, errorBody.length()) == errorBody);
 	CHECK(response2.status == 400);
+	CHECK(response2.statusText == "Bad Request");
 
 	expect_host_header = true;
 	HttpRequest request3(method, uri3);
 	HttpResponse response3 = HttpClient::request(request3, host, port);
-	CHECK(response3.status == 200);
 	CHECK(response3.body() == body);
+	CHECK(response3.status == 200);
+	CHECK(response3.statusText == "OK");
 
 	hs->stop();
 	t.join();

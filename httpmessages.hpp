@@ -210,7 +210,11 @@ struct HttpResponse : public HttpMessage {
 		{ // First line: <httpVersion> <status> <code>
 			std::string line = read_line(rawHttp, pos);
 			std::stringstream firstline(line);
-			firstline >> httpVersion >> status >> statusText;
+			firstline >> httpVersion >> status;
+			statusText = line.substr(uint32_t(firstline.tellg()) + 1);
+			while(!statusText.empty() && isspace(statusText.back())) {
+				statusText.resize(statusText.size() - 1);
+			}
 			if(httpVersion != "HTTP/1.0" && httpVersion != "HTTP/1.1") {
 				throw InvalidHttpMessageException("HTTP version must be HTTP/1.0 or HTTP/1.1");
 			}
