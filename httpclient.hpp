@@ -67,14 +67,7 @@ public:
 		bool socket_is_connected = true;
 		while(1) {
 			try {
-				std::istream is(&response);
-				char buffer[512];
-				while(is.read(buffer, sizeof(buffer))) {
-					fullResponse.append(buffer, sizeof(buffer));
-				}
-				if(is.gcount() > 0) {
-					fullResponse.append(buffer, is.gcount());
-				}
+				fullResponse.append(std::istreambuf_iterator<char>(&response), {});
 				HttpResponse res(fullResponse, socket_is_connected);
 				return res;
 			} catch(HttpMessage::IncompleteHttpMessageException &) {
