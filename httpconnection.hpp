@@ -58,41 +58,65 @@ private:
 		}
 	}
 
-	void respond(HttpResponsePtr &r) {
-		auto that = shared_from_this();
-		auto write_handler =
-			[that](boost::system::error_code e, size_t) {
-				if(e) {
-					std::cerr << "Write Error: " << e.message() << std::endl;
-					return;
-				}
-				// TODO: if connection-type wasn't keepalive:
-				//boost::system::error_code ec;
-				//socket_.shutdown(tcp::socket::shutdown_both, ec);
-		};
+	struct ChunkedTransferer {
+		std::shared_ptr<std::string> buffer;
+		HttpResponsePtr response;
+		BaseSocketPtr socket;
 
-		// TODO: in async_write, we need to make sure the buffer exists
-		// at least until the write_handler is done executing. Currently, we
-		// only guarantee the buffer exists until respond() is done, but the
-		// write is async so this is not enough.
-		std::string headers = r->toHeaders();
-		socket_->async_write(headers, write_handler);
-
-		if(r->isChunked()) {
-			try {
-				while(1) {
-					std::string chunk = r->readChunk();
-					socket_->async_write(chunk, write_handler);
-				}
-			} catch(HttpMessage::NoChunksLeftException &) {
-				// TODO: use chunked transfer-encoding and send "end of chunks" signal
-				boost::system::error_code ec;
-				socket_->shutdown(tcp::socket::shutdown_both, ec);
+		void operator()(boost::system::error_code ec, size_t) {
+			if(ec) {
+				std::cerr << "Write Error: " << ec.message() << std::endl;
+				socket->close();
+				return;
 			}
-		} else {
-			std::string body = r->body();
-			socket_->async_write(body, write_handler);
+
+			try {
+				buffer = std::make_shared<std::string>(response->readChunk());
+				socket->async_write(*buffer.get(), *this);
+			} catch(HttpMessage::NoChunksLeftException&) {
+				// TODO: use chunked transfer-encoding and send "end of chunks" signal
+				socket->close();
+			}
 		}
+	};
+
+	void respond(HttpResponsePtr r) {
+		bool must_close = r->headers.find("Content-Length") == r->headers.end();
+		std::shared_ptr<std::string> buffer = std::make_shared<std::string>(r->toHeaders());
+		BaseSocketPtr socket = socket_;
+		socket->async_write(*buffer.get(), [buffer, r, socket, must_close](boost::system::error_code e, size_t) mutable {
+			if(e) {
+				std::cerr << "Write Error: " << e.message() << std::endl;
+				socket->close();
+				return;
+			}
+
+			if(r->isChunked()) {
+				ChunkedTransferer transfer;
+				transfer.buffer = buffer;
+				transfer.response = r;
+				transfer.socket = socket;
+				boost::system::error_code ec;
+				transfer(ec, 0);
+			} else if(!r->body().empty()) {
+				buffer.reset(new std::string(r->body()));
+				socket->async_write(*buffer.get(), [buffer, socket, must_close](boost::system::error_code ec, size_t) mutable {
+					buffer.reset(); // mention buffer so the pointer gets copied into the lambda
+
+					if(ec) {
+						std::cerr << "Write Error: " << ec.message() << std::endl;
+						socket->close();
+						return;
+					}
+
+					if(must_close) {
+						socket->close();
+					}
+				});
+			} else if(must_close) {
+				socket->close();
+			}
+		});
 	}
 
 	BaseSocketPtr socket_;

@@ -18,6 +18,7 @@ add_executable(checker
   uri.cpp
   timeout.cpp
   abort.cpp
+  nocontent.cpp
 )
 target_link_libraries(checker ${Boost_LIBRARIES} sg--http)
 
