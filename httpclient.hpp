@@ -199,7 +199,7 @@ private:
 			}
 		}
 		check_aborted();
-		assert(false); /* unreachable */
+		throw std::runtime_error(""); /* unreachable */
 	}
 };
 

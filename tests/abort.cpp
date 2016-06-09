@@ -37,7 +37,7 @@ TEST_CASE("Abort") {
 		try {
 			HttpRequest request("GET", "/");
 			c.do_request(request, host, port);
-		} catch(std::exception &e) {
+		} catch(std::exception&) {
 			// TODO: timeout exception only
 			done_with_test = true;
 		}

@@ -35,7 +35,7 @@ TEST_CASE("Timeout") {
 			// wait 5 seconds for this request to complete, then throw
 			HttpRequest request("GET", "/");
 			HttpClient::request(request, host, port, boost::posix_time::seconds(5));
-		} catch(std::exception &e) {
+		} catch(std::exception&) {
 			// TODO: timeout exception only
 			done_with_test = true;
 		}
