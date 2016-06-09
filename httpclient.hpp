@@ -19,12 +19,17 @@ class HttpClient {
 	boost::asio::io_service io_service;
 	std::atomic<bool> aborted;
 	BaseSocketPtr socket;
+	std::function<void(size_t)> progress_handler;
 
 public:
 	typedef boost::asio::ip::tcp tcp;
 
 	void set_timeout(boost::posix_time::time_duration t) {
 		timeout = t;
+	}
+
+	void set_progress_handler(std::function<void(size_t)> h) {
+		progress_handler = h;
 	}
 
 	void abort() {
@@ -162,6 +167,9 @@ private:
 
 		boost::asio::async_read_until(*socket, response, "\n", var(ec) = _1);
 		pump_io_service(ec);
+		if(progress_handler) {
+			progress_handler(response.size());
+		}
 
 		std::string fullResponse;
 		bool socket_is_connected = true;
@@ -183,6 +191,10 @@ private:
 					socket_is_connected = false;
 				} else if(ec && ec != boost::asio::error::would_block) {
 					throw boost::system::system_error(ec);
+				}
+
+				if(progress_handler) {
+					progress_handler(response.size());
 				}
 			}
 		}
