@@ -98,6 +98,7 @@ private:
 		using boost::lambda::var;
 		using boost::lambda::_1;
 
+		io_service.reset();
 		boost::asio::io_service::work work(io_service);
 
 		boost::asio::deadline_timer deadline(io_service);
