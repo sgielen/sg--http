@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <map>
 
 namespace sg { namespace http {
 
@@ -120,6 +121,31 @@ struct Uri {
 		if(locpos != std::string::npos) {
 			location = uri.substr(readpos + 1);
 		}
+	}
+
+	std::map<std::string, std::string> queryParameters() {
+		std::map<std::string, std::string> res;
+		bool in_key = true;
+		std::string key;
+		std::string str;
+		for(size_t i = 0; i < query.size(); ++i) {
+			if(in_key && query[i] == '=') {
+				in_key = false;
+			} else if(query[i] == '&') {
+				in_key = true;
+				res[key] = str;
+				str.clear();
+				key.clear();
+			} else if(in_key) {
+				key += query[i];
+			} else {
+				str += query[i];
+			}
+		}
+		if(!in_key) {
+			res[key] = str;
+		}
+		return res;
 	}
 };
 
