@@ -110,10 +110,12 @@ private:
 					}
 
 					if(must_close) {
+						socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 						socket->close();
 					}
 				});
 			} else if(must_close) {
+				socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, e);
 				socket->close();
 			}
 		});
