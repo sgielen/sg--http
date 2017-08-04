@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-find_package(wubwubcmake 1)
+find_package(wubwubcmake 2)
 if(wubwubcmake_DIR)
 	include(wubwubcmake/warning_settings)
 	add_sane_warning_flags()
