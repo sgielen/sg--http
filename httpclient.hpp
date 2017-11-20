@@ -106,7 +106,7 @@ private:
 		std::function<void(error_code)> check_deadline = [&](error_code) {
 			if(deadline.expires_at() <= boost::asio::deadline_timer::traits_type::now())
 			{
-				socket->close();
+				reset();
 			} else {
 				deadline.async_wait(check_deadline);
 			}

@@ -20,6 +20,7 @@ add_executable(checker
   abort.cpp
   nocontent.cpp
   reuse.cpp
+  premature-close.cpp
 )
 target_link_libraries(checker ${Boost_LIBRARIES} sg--http)
 

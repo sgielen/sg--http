@@ -37,17 +37,18 @@ struct Socket : public BaseSocket
 {
 	Socket(boost::asio::io_service &io_service)
 	: socket_(io_service)
+	, strand_(io_service)
 	{}
 
 	virtual ~Socket() {}
 
 	void async_connect(boost::asio::ip::basic_resolver<boost::asio::ip::tcp>::iterator &it,
 		std::function<void(boost::system::error_code, tcp::resolver::iterator)> f) {
-		boost::asio::async_connect(socket_, it, f);
+		boost::asio::async_connect(socket_, it, strand_.wrap(f));
 	}
 
 	void async_accept(tcp::acceptor &acceptor, std::function<void(boost::system::error_code)> f) {
-		acceptor.async_accept(socket_, f);
+		acceptor.async_accept(socket_, strand_.wrap(f));
 	}
 
 	virtual void async_start(std::function<void()> f)
@@ -59,13 +60,13 @@ struct Socket : public BaseSocket
 	virtual void async_read_some(boost::asio::mutable_buffers_1 b,
 		std::function<void(boost::system::error_code, size_t)> f)
 	{
-		socket_.async_read_some(b, f);
+		socket_.async_read_some(b, strand_.wrap(f));
 	}
 
 	virtual void async_write(std::string const &b,
 		std::function<void(boost::system::error_code, size_t)> f)
 	{
-		boost::asio::async_write(socket_, boost::asio::buffer(b.data(), b.size()), f);
+		boost::asio::async_write(socket_, boost::asio::buffer(b.data(), b.size()), strand_.wrap(f));
 	}
 
 	virtual void connect(boost::asio::ip::basic_resolver<boost::asio::ip::tcp>::iterator &it)
@@ -100,6 +101,7 @@ struct Socket : public BaseSocket
 
 private:
 	tcp::socket socket_;
+	boost::asio::io_service::strand strand_;
 };
 
 #ifdef SG_HTTP_SSL
@@ -108,40 +110,41 @@ struct SslSocket : public BaseSocket
 	SslSocket(boost::asio::io_service &io_service,
 	    boost::asio::ssl::context &context)
 	: socket_(io_service, context)
+	, strand_(io_service)
 	{}
 
 	void async_connect(boost::asio::ip::basic_resolver<boost::asio::ip::tcp>::iterator &it,
 		std::function<void(boost::system::error_code, tcp::resolver::iterator)> f) {
-		boost::asio::async_connect(socket_.lowest_layer(), it, f);
+		boost::asio::async_connect(socket_.lowest_layer(), it, strand_.wrap(f));
 	}
 
 	void async_accept(tcp::acceptor &acceptor, std::function<void(boost::system::error_code)> f) {
-		acceptor.async_accept(socket_.lowest_layer(), f);
+		acceptor.async_accept(socket_.lowest_layer(), strand_.wrap(f));
 	}
 
 	virtual void async_start(std::function<void()> f)
 	{
 		socket_.async_handshake(boost::asio::ssl::stream_base::server,
-			[f](boost::system::error_code error) {
+			strand_.wrap([f](boost::system::error_code error) {
 				if(error) {
 					std::cerr << "SSL handshake error: " << error.message() << std::endl;
 				} else {
 					f();
 				}
-			}
+			})
 		);
 	}
 
 	virtual void async_read_some(boost::asio::mutable_buffers_1 b,
 		std::function<void(boost::system::error_code, size_t)> f)
 	{
-		socket_.async_read_some(b, f);
+		socket_.async_read_some(b, strand_.wrap(f));
 	}
 
 	virtual void async_write(std::string const &b,
 		std::function<void(boost::system::error_code, size_t)> f)
 	{
-		boost::asio::async_write(socket_, boost::asio::buffer(b.data(), b.size()), f);
+		boost::asio::async_write(socket_, boost::asio::buffer(b.data(), b.size()), strand_.wrap(f));
 	}
 
 	virtual void connect(boost::asio::ip::basic_resolver<boost::asio::ip::tcp>::iterator &it)
@@ -180,7 +183,7 @@ struct SslSocket : public BaseSocket
 
 	void async_ssl_handshake(boost::asio::ssl::stream_base::handshake_type mode,
 		std::function<void(boost::system::error_code)> f) {
-		socket_.async_handshake(mode, f);
+		socket_.async_handshake(mode, strand_.wrap(f));
 	}
 
 	virtual bool is_open()
@@ -194,8 +197,10 @@ struct SslSocket : public BaseSocket
 	}
 
 	typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
+
 private:
 	ssl_socket socket_;
+	boost::asio::io_service::strand strand_;
 };
 #endif
 

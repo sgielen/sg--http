@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 project(sg--http)
 
 set("${CMAKE_PROJECT_NAME}_VERSION_MAJOR" 1)
-set("${CMAKE_PROJECT_NAME}_VERSION_MINOR" 1)
+set("${CMAKE_PROJECT_NAME}_VERSION_MINOR" 2)
 set("${CMAKE_PROJECT_NAME}_VERSION_PATCH" 0)
 
 find_package(wubwubcmake 2)
