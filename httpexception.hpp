@@ -15,15 +15,23 @@ protected:
 	std::map<std::string, std::string> headers_;
 
 public:
+	HttpException(uint16_t c, std::string t, HttpRequestPtr r)
+	: std::runtime_error(t)
+	, code_(c)
+	, req_(r)
+	, text_(t) {}
+
 	HttpException(uint16_t c, HttpRequestPtr r, std::string w)
 	: std::runtime_error(w)
 	, code_(c)
-	, req_(r) {}
+	, req_(r)
+	, text_(statusTextFor(c)) {}
 
 	HttpException(uint16_t c, HttpRequestPtr r)
 	: std::runtime_error(statusTextFor(c))
 	, code_(c)
-	, req_(r) {}
+	, req_(r)
+	, text_(statusTextFor(c)) {}
 
 	std::map<std::string, std::string> headers() const {
 		return headers_;
@@ -31,6 +39,10 @@ public:
 
 	uint16_t code() const {
 		return code_;
+	}
+
+	std::string statusText() const {
+		return text_;
 	}
 
 	HttpRequestPtr req() const {
@@ -42,6 +54,9 @@ public:
 		    + "Method: " + req_->method + "\n"
 		    + "Path:   " + req_->uri;
 	}
+
+private:
+	std::string text_;
 };
 
 template <uint16_t Code>
@@ -78,7 +93,7 @@ inline HttpResponsePtr request_exception_wrapper(HttpRequestPtr &request, Reques
 	try {
 		return handler(request);
 	} catch(HttpException &e) {
-		auto response = HttpResponsePtr(new HttpResponse(e.code()));
+		auto response = HttpResponsePtr(new HttpResponse(e.code(), e.statusText()));
 		response->headers = e.headers();
 		response->setBody(e.body(), "text/plain");
 		return response;

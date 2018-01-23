@@ -200,6 +200,10 @@ struct HttpResponse : public HttpMessage {
 	: status(status_), statusText(statusText_), httpVersion(httpVersion_) {
 	}
 
+	HttpResponse(uint16_t status_, std::string statusText_)
+	: status(status_), statusText(statusText_), httpVersion("HTTP/1.1") {
+	}
+
 	HttpResponse(uint16_t status_)
 	: status(status_), statusText(statusTextFor(status)), httpVersion("HTTP/1.1") {
 	}
